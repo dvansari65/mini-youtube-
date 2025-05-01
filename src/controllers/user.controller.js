@@ -254,40 +254,7 @@ const getCurrentUser = AsyncHandler(async (req,res)=>{
     )
 })
 
-// const changeUserName = AsyncHandler( async (req,res)=>{
-//     // take new userName from user
-//     //check it is already existed or not 
-//     //if existed in db then it can change the userName
-//     //if not existed then replace old username with new username 
-//     //return to the user that userNAME ia changed 
 
-//     const {newUserName} = req.body
-
-//     const user  = await User.findById(req.user?._id)
-//     if(!user){
-//         throw new ApiError(404,"User not found ")
-//     }
-//     const existingUser  = await User.findOne({userName:newUserName})
-
-//     if(existingUser){
-//         throw new ApiError(404,"User name already taken ")
-//     }
-
-//     user.userName = newUserName;
-    
-//     user.save({validateBeforeSave:false})
-//     return res
-//     .status(200)
-//     .json(
-//         new ApiResponse(
-//             200,
-//         {},
-//         "user name changed succesfully!"
-//         )
-//     )
-
-
-// })
 
 const updateAccountDetails = AsyncHandler( async (req,res)=>{
     const {fullName,userName,email} = req.body
