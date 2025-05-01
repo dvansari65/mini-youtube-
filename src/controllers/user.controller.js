@@ -4,7 +4,7 @@ import AsyncHandler from "../utils/AsyncHandler.js";
 import uploadOnCloudinary from "../utils/cloudinary.js";
 import ApiResponse from "../utils/ApiResponse.js";
 import fs from "fs";
-
+import jwt from "jsonwebtoken"
 const registerUser = AsyncHandler(async (req, res) => {
     console.log("BODY:", req.body);
     console.log("FILES:", req.files);
@@ -77,7 +77,7 @@ const generateAccessAndRefreshToken = async (userId) => {
         }
         const refreshToken = await user.generateRefreshToken();
         const accessToken = await user.generateAccessToken();
-        
+
         user.refreshToken = refreshToken;
         await user.save({ validateBeforeSave: true });
 
@@ -156,5 +156,59 @@ const logOutUser = AsyncHandler(async (req, res) => {
         );
 });
 
+
+const refreshTokenForUser = AsyncHandler( async (req,res)=>{
+       const InputUserRefreshToken =  await req.cookies?.refreshToken || req.body.refreshToken
+       console.log("userRefreshToken:",InputUserRefreshToken)
+
+       if(!InputUserRefreshToken){
+        throw new ApiError(401,"Inavalid refreshToken given by user")
+       }
+      try {
+         const decodedUserRefreshToken = jwt.verify(InputUserRefreshToken,process.env.REFRESH_TOKEN_SECRET)
+         console.log("decodedUserRefreshToken :",decodedUserRefreshToken);
+         
+         if(!decodedUserRefreshToken){
+          throw new ApiError(401,"Inavalid refreshToken given by user")
+         }
+
+         const user  = await User.findById(decodedUserRefreshToken?._id)
+         
+         if(!user){
+            throw new ApiError(401,"invalid request")
+        }
+        if(decodedUserRefreshToken !== user?.refreshToken ){
+            throw new ApiError(401,"tokens not matched with the database!")
+        }
+
+        const {newRefreshToken, accessToken} = await generateAccessAndRefreshToken(user?._id)
+        
+        const options = {
+            httpOnly: true,
+            secure: true
+        };
+        return res
+        .status(200)
+        .cookie("refreshToken",newRefreshToken,options)
+        .cookie("accessToken",accessToken,options)
+        .json(
+            new ApiResponse(
+                200,
+                {
+                    refreshToken:newRefreshToken,accessToken,options
+                },
+                "Refreshtoken created successfully!!"
+            )
+        )
+
+        
+      } catch (error) {
+        throw new ApiError(401,"invalid user")
+      }
+
+      
+       
+})
+
 export default registerUser;
-export { loginUser, logOutUser };
+export { loginUser, logOutUser, refreshTokenForUser };
