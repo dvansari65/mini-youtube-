@@ -210,5 +210,171 @@ const refreshTokenForUser = AsyncHandler( async (req,res)=>{
        
 })
 
+const changeUserPassword = AsyncHandler( async (req, res)=>{
+    const {oldPassword,newPassword} = req.body
+
+    const user = User.findById(req.user?._id)
+    if(!user){
+        throw new ApiError(401,"Invalid request")
+    }
+    const isPasswordValidate = await user?.isPasswordCorrect(oldPassword)
+    if(!isPasswordValidate){
+        throw new ApiError(401,"Invalid password")
+    }
+
+    user.password = newPassword;
+
+    await user.save({validateBeforeSave:false})
+
+    return res
+    .status(200)
+    .json(
+        200,
+        {},
+        "password changed succesafully!"
+    )
+
+
+})
+
+const getCurrentUser = AsyncHandler(async (req,res)=>{
+    const newUser = req.user
+    if(!newUser){
+        throw new ApiError(404,"User not found ")
+    }
+    console.log("user info:",newUser)
+    return res
+    .status(200)
+    .json(
+        new ApiResponse(
+            200,
+            {newUser},
+            "User found successfully!"
+        )
+    )
+})
+
+// const changeUserName = AsyncHandler( async (req,res)=>{
+//     // take new userName from user
+//     //check it is already existed or not 
+//     //if existed in db then it can change the userName
+//     //if not existed then replace old username with new username 
+//     //return to the user that userNAME ia changed 
+
+//     const {newUserName} = req.body
+
+//     const user  = await User.findById(req.user?._id)
+//     if(!user){
+//         throw new ApiError(404,"User not found ")
+//     }
+//     const existingUser  = await User.findOne({userName:newUserName})
+
+//     if(existingUser){
+//         throw new ApiError(404,"User name already taken ")
+//     }
+
+//     user.userName = newUserName;
+    
+//     user.save({validateBeforeSave:false})
+//     return res
+//     .status(200)
+//     .json(
+//         new ApiResponse(
+//             200,
+//         {},
+//         "user name changed succesfully!"
+//         )
+//     )
+
+
+// })
+
+const updateAccountDetails = AsyncHandler( async (req,res)=>{
+    const {fullName,userName,email} = req.body
+    const user =  await User.findByIdAndUpdate(
+        req.user?._id,
+        {
+            $set: {
+                email,
+                fullName,
+                userName,
+            }
+        },
+        {
+            new:true,
+        }
+    )
+    if(!user){
+        throw new ApiError(404,"user not found ")
+    }
+    return res
+    .status(200)
+    .json(
+        new ApiResponse(
+            200,
+            {
+                user
+            },
+            "information updated succesfully"
+        )
+    )
+
+})
+const updateAvatar = AsyncHandler ( async (req,res)=>{
+    const avatarLocalFilePath = req.file?.path
+    if(!avatarLocalFilePath){
+        throw new ApiError(404,"avatar file path  not found  ")
+    }
+    const avatar = await uploadOnCloudinary(avatarLocalFilePath)
+
+    if(!avatar.url){
+        throw new ApiError(404,"avatar file url is required  ")
+    }
+
+   const user =  await User.findByIdAndUpdate(req.user?._id,
+        {
+           $set : {avatar:avatar.url}
+        },
+        {
+            new:true
+        }
+    ).select("-password")
+
+    return res
+    .status(200)
+    .json(
+        new ApiResponse(200,user, "avatar image updated successfully")
+    )
+})
+
+const updateCoverImage = AsyncHandler ( async (req,res)=>{
+    const coverImageLocalPath = req.file?.path
+    if(!coverImageLocalPath){
+        throw new ApiError(404,"cover image  file path  not found  ")
+    }
+    const coverImage = await uploadOnCloudinary(coverImageLocalPath)
+
+    if(!coverImageLocalPath.url){
+        throw new ApiError(404,"cover image file url is required  ")
+    }
+
+   const user =  await User.findByIdAndUpdate(req.user?._id,
+        {
+           $set : {coverImage:coverImage.url}
+        },
+        {
+            new:true
+        }
+    ).select("-password")
+
+    return res
+    .status(200)
+    .json(
+        new ApiResponse(200,user, "cover image image updated successfully")
+    )
+})
+
+
+
 export default registerUser;
-export { loginUser, logOutUser, refreshTokenForUser };
+export { loginUser, logOutUser, refreshTokenForUser,changeUserPassword,getCurrentUser,updateAccountDetails,updateAvatar ,updateCoverImage};
