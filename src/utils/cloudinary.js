@@ -34,8 +34,41 @@ const uploadOnCloudinary = async (localFilePath) => {
       return null;
     }
   };
-  
+
+  function getPublicIdFromUrl(url) {
+    // Assuming the Cloudinary URL has the structure:
+    // https://res.cloudinary.com/your_cloud/image/upload/v12345678/foldername/filename.jpg
+    const parts = url.split('/');
+    
+    // Get the file name with extension (e.g., "filename.jpg")
+    const fileWithExtension = parts.pop();
+
+    // Get the file name without extension (e.g., "filename")
+    const fileName = fileWithExtension.split('.')[0];
+
+    // Optionally, get the folder name if used
+    const folder = parts[parts.length - 1]; // e.g., "foldername" if using folders in Cloudinary
+
+    return `${folder ? folder + '/' : ''}${fileName}`; // public_id: folder/filename
+}
+
+async function deleteFromCloudinary(publicId) {
+  try {
+      // Call the Cloudinary API to delete the image
+      const result = await cloudinary.uploader.destroy(publicId);
+
+      // Check if deletion was successful
+      if (result.result === 'ok') {
+          console.log('Image deleted successfully from Cloudinary');
+      } else {
+          console.log('Failed to delete image from Cloudinary');
+      }
+  } catch (err) {
+      console.error('Error deleting from Cloudinary:', err);
+  }
+}
 
 
 
-export default uploadOnCloudinary
+
+export{uploadOnCloudinary,deleteFromCloudinary,getPublicIdFromUrl} 

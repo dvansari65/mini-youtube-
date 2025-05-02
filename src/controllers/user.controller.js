@@ -3,6 +3,7 @@ import ApiError from "../utils/ApiError.js";
 import AsyncHandler from "../utils/AsyncHandler.js";
 import {uploadOnCloudinary,deleteFromCloudinary,getPublicIdFromUrl} from "../utils/cloudinary.js";
 import ApiResponse from "../utils/ApiResponse.js";
+import mongoose from "mongoose";
 import fs from "fs";
 import jwt from "jsonwebtoken"
 const registerUser = AsyncHandler(async (req, res) => {
@@ -158,7 +159,7 @@ const logOutUser = AsyncHandler(async (req, res) => {
 
 
 const refreshTokenForUser = AsyncHandler( async (req,res)=>{
-       const InputUserRefreshToken =  await req.cookies?.refreshToken || req.body.refreshToken
+       const InputUserRefreshToken =   req.cookies?.refreshToken || req.body.refreshToken
        console.log("userRefreshToken:",InputUserRefreshToken)
 
        if(!InputUserRefreshToken){
@@ -213,11 +214,11 @@ const refreshTokenForUser = AsyncHandler( async (req,res)=>{
 const changeUserPassword = AsyncHandler( async (req, res)=>{
     const {oldPassword,newPassword} = req.body
 
-    const user = User.findById(req.user?._id)
+    const user = await User.findById(req.user?._id)
     if(!user){
         throw new ApiError(401,"Invalid request")
     }
-    const isPasswordValidate = await user?.isPasswordCorrect(oldPassword)
+    const isPasswordValidate = await user.isPasswordCorrect(oldPassword)
     if(!isPasswordValidate){
         throw new ApiError(401,"Invalid password")
     }
@@ -229,9 +230,9 @@ const changeUserPassword = AsyncHandler( async (req, res)=>{
     return res
     .status(200)
     .json(
-        200,
-        {},
-        "password changed succesafully!"
+        new ApiResponse(200,
+            {},
+            "password changed successfully!")
     )
 
 
@@ -239,6 +240,8 @@ const changeUserPassword = AsyncHandler( async (req, res)=>{
 
 const getCurrentUser = AsyncHandler(async (req,res)=>{
     const newUser = req.user
+    console.log("what is in 'req.user:'",req.user)
+    console.log("what is in req.user._id",req.user._id)
     if(!newUser){
         throw new ApiError(404,"User not found ")
     }
@@ -274,6 +277,7 @@ const updateAccountDetails = AsyncHandler( async (req,res)=>{
     if(!user){
         throw new ApiError(404,"user not found ")
     }
+    console.log("user in updateAccountDetails method > ",user)
     return res
     .status(200)
     .json(
@@ -354,14 +358,15 @@ const updateCoverImage = AsyncHandler ( async (req,res)=>{
 })
 
 const getUserChannelProfile = AsyncHandler ( async (req,res)=>{
-    const {username} = req.params
-    if(!username){
+    const {userName} = req.params
+    console.log("req.params => ",req.params)
+    if(!userName){
         throw new ApiError(404,"user not found")
     }
    const channel = await  User.aggregate([
         {
             $match:{
-                userName:username?.toLowerCase()
+                userName:userName?.toLowerCase()
             },
         },
         {
@@ -413,7 +418,7 @@ const getUserChannelProfile = AsyncHandler ( async (req,res)=>{
         }
        }
     ])
-    if(!channel?.length){
+    if(!channel || !Array.isArray(channel)){
         throw new ApiError(404,"channel not found ")
     }
     console.log("channel info:",channel)
@@ -429,7 +434,10 @@ const getUserChannelProfile = AsyncHandler ( async (req,res)=>{
 
 })
 const getWatchHistory = AsyncHandler( async (req,res)=>{
-        const user = User.aggregate( [
+    if(!req.user || !req.user?._id){
+        throw new ApiError(401,"unauthorized request!")
+    }
+        const user = await User.aggregate( [
             {
                 $match:{
                     _id: new mongoose.Types.ObjectId(req.user._id)
@@ -437,16 +445,16 @@ const getWatchHistory = AsyncHandler( async (req,res)=>{
             },
             {
                 $lookup:{
-                    from:"Video",
+                    from:"videos",
                     localField:"watchHistory",
                     foreignField:"_id",
                     as:"watchHistory",
                     pipeline:[
                         {
                             $lookup:{
-                                from:"User",
+                                from:"users",
                                 localField:"owner",
-                                foreignFeild:"_id",
+                                foreignField:"_id",
                                 as:"owner",
                                 pipeline:[
                                     {
@@ -458,20 +466,23 @@ const getWatchHistory = AsyncHandler( async (req,res)=>{
                                         }
                                     }
                                 ]
+                            },
+                            
+                        },
+                        {
+                            $addFields:{
+                                owner:{
+                                    $first:"$owner"
+                                }
                             }
                         }
                     ]
                 }
             },
-            {
-                $addFields:{
-                    owner:{
-                        $first:"$owner"
-                    }
-                }
-            }
+
         ])
-        if(!user?.length){
+        console.log("user after adding pipeline =>",user)
+        if(!user?.length || !Array.isArray(user)){
             throw new ApiError(404,"there is no watch history ")
         }
 
@@ -482,4 +493,13 @@ const getWatchHistory = AsyncHandler( async (req,res)=>{
         )
 })
 export default registerUser;
-export { loginUser, logOutUser, refreshTokenForUser,changeUserPassword,getCurrentUser,updateAccountDetails,updateAvatar ,updateCoverImage,getUserChannelProfile,getWatchHistory};
+export { loginUser, 
+    logOutUser, 
+    refreshTokenForUser,
+    changeUserPassword,
+    getCurrentUser,
+    updateAccountDetails,
+    updateAvatar ,
+    updateCoverImage,
+    getUserChannelProfile,
+    getWatchHistory};
