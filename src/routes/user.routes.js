@@ -1,7 +1,7 @@
 import { Router } from "express"
 import registerUser from "../controllers/user.controller.js";
 import { upload } from "../middlewares/multer.middleware.js";
-import { loginUser,logOutUser,refreshTokenForUser,updateAccountDetails,updateAvatar,updateCoverImage } from "../controllers/user.controller.js";
+import { loginUser,logOutUser,refreshTokenForUser,updateAccountDetails,updateAvatar,updateCoverImage,getWatchHistory,getUserChannelProfile } from "../controllers/user.controller.js";
 import verifyJwt from "../middlewares/user.middleware.js";
 const userRouter = Router()
 
@@ -18,5 +18,7 @@ userRouter.route("/register").post(
   userRouter.route("/update-Account").post(verifyJwt,updateAccountDetails)
   userRouter.route("/update-Avatar").post(verifyJwt,updateAvatar)
   userRouter.route("/update-Cover-Image").post(verifyJwt,updateCoverImage)
+  userRouter.route("/watch-history").post(verifyJwt,getWatchHistory)
+  userRouter.route("getUser-Channel-Profile").post(verifyJwt,getUserChannelProfile)
 
 export default userRouter;
