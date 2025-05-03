@@ -16,6 +16,10 @@ const likesSchema = new Schema({
     video:{
         type:StriSchema.Types.ObjectId,
         ref:"Video"
+    },
+    count:{
+        type:Number,
+        required:true
     }
 },{timestamps:true})
 

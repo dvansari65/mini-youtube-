@@ -6,7 +6,7 @@ import ApiResponse from "../utils/ApiResponse";
 import { uploadOnCloudinary } from "../utils/cloudinary";
 import fs from "fs"
 const uploadVideosContent = AsyncHandler ( async (req,res)=>{
-    const {thumbNail,title,description}  = req.body
+    const {thumbNail,title,description,duration,isPublished}  = req.body
     const videoLocalPath = req.files?.path
 
     if(!videoLocalPath){
@@ -16,14 +16,17 @@ const uploadVideosContent = AsyncHandler ( async (req,res)=>{
     const uploadedVideo = await uploadOnCloudinary(videoLocalPath)
     console.log("Uploaded video details:", uploadedVideo);
 
-    if(!uploadedVideo){
-      if(fs.existsSync(videoLocalPath)){
-        fs.unlinkSync(videoLocalPath)
-    }
-      throw new ApiError(401,"video not uploaded on the cloudinary")
+    try {
+        if(!uploadedVideo || !uploadedVideo.url){
+          if(fs.existsSync(videoLocalPath)){
+            fs.unlinkSync(videoLocalPath)
+          }
+        }
+    } catch (error) {
+        console.error("Failed to delete local file:", error.message);
     }
 
-    if(!thumbNail || !title || !description){
+    if(!thumbNail || !title || !description || !duration){
         throw new ApiError(401,"all fields are required!")
     }
 
@@ -47,7 +50,9 @@ const uploadVideosContent = AsyncHandler ( async (req,res)=>{
          title:req.body.title,
          description:req.body.description,
          owner : user,
-         videoFile:uploadedVideo
+         duration,
+         videoFile:uploadedVideo.url,
+         isPublished:isPublished || false,
      })
     } catch (error) {
         throw new ApiError(500,"video not uploaded ")
@@ -67,13 +72,16 @@ const uploadVideosContent = AsyncHandler ( async (req,res)=>{
 })
 
 const watchVideo = AsyncHandler(async (req,res)=>{
-    const videoID = req.params.id
+    const {videoId} = req.params
     console.log("req.params:",req.params)
-    if(!videoID){
+    if(!videoId){
         throw new ApiError(401,"something is wrong with video")
     }
 
-    const video =  await Video.findById(videoID).populate("owner","userName")
+    const video =  await Video.findById(videoId).populate("owner","userName")
+    if(!video){
+        throw new ApiError(404,"video not found")
+    }
 
     video.views = (video.views || 0) + 1;
 
@@ -86,7 +94,7 @@ const watchVideo = AsyncHandler(async (req,res)=>{
         new ApiResponse(
             200,
             {
-                userName:video.userName,
+                userName:video.owner.userName,
                 title:video.title,
                 description:video.description,
                 owner:video.owner,
@@ -98,8 +106,8 @@ const watchVideo = AsyncHandler(async (req,res)=>{
 })
 
 const updateVideo = AsyncHandler( async (req,res)=>{
-    const {title,description,thumbnail} = req.body
-    const videoId = req.params.id
+    const {title,description,thumbNail} = req.body
+    const {videoId} = req.params
     if(!videoId){
         throw new ApiError(404,"please select the video")
     }
@@ -118,7 +126,7 @@ const updateVideo = AsyncHandler( async (req,res)=>{
     try {
         if(title) video.title = title;
         if(description) video.description = description;
-        if(thumbnail) video.thumbnail = thumbnail;
+        if(thumbNail) video.thumbNail = thumbNail;
     
         savedUpdates = await video.save({validateBeforeSave:false})
     } catch (error) {
@@ -137,7 +145,7 @@ const updateVideo = AsyncHandler( async (req,res)=>{
 })
 
 const deleteVideo = AsyncHandler (async (req,res)=>{
-   const videoId = req.params.id
+   const {videoId} = req.params
    const user = req.user?._id
    console.log("req.file.path:",req.file?.path)
    if(!videoId){
@@ -156,7 +164,8 @@ const deleteVideo = AsyncHandler (async (req,res)=>{
    try {
     await Video.deleteOne(video)
    } catch (error) {
-    throw new ApiError(500,"something is wrong")
+    console.error("Error deleting video:", error.message);
+    throw new ApiError(500, "Something went wrong");
    }
 
    return res
@@ -170,6 +179,43 @@ const deleteVideo = AsyncHandler (async (req,res)=>{
    )
 
 })
+const getVideo = AsyncHandler ( async (req,res)=>{
+    const {videoId} = req.params
+
+    if(!videoId){
+        throw new ApiError(401,"video not found")
+    }
+
+    const video = await Video.findById(videoId)
+    if(!video){
+        throw new ApiError(401,"video not found")
+    }
+
+    return res
+    .status(200)
+    .json(
+        new ApiResponse(
+            200,
+            video,
+            "video succssfully found"
+        )
+    )
+})
+
+const getAllVideos = AsyncHandler ( async (req,res)=>{
+   
+    const videos = await Video.find().populate("owner","userName")
+    
+    return res
+    .status(200)
+    .json(
+        new ApiResponse(
+            200,
+            videos,
+            "request accepted successfully"
+        )
+    )
+})
 
 
 export {
@@ -177,4 +223,6 @@ export {
     watchVideo,
     updateVideo,
     deleteVideo,
+    getVideo,
+    getAllVideos
 } 
