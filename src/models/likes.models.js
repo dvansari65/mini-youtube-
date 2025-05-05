@@ -2,7 +2,7 @@ import mongoose, { Schema } from "mongoose";
 
 const likesSchema = new Schema({
     tweet:{
-        type:Schema.Types.Object,
+        type:Schema.Types.ObjectId,
         ref:"Tweet"
     },
     comment:{
