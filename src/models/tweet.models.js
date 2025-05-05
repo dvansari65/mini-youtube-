@@ -1,5 +1,5 @@
 import mongoose from "mongoose"
-
+import { Schema } from "mongoose"
 const tweetSchema = new Schema({
     content:{
         type:String,

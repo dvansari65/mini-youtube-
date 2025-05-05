@@ -1,20 +1,26 @@
-import ApiError from "../utils/ApiError";
-import AsyncHandler from "../utils/AsyncHandler";
-import { Like } from "../models/likes.models";
-import ApiResponse from "../utils/ApiResponse";
-
+import ApiError from "../utils/ApiError.js";
+import AsyncHandler from "../utils/AsyncHandler.js";
+import { Like } from "../models/likes.models.js";
+import ApiResponse from "../utils/ApiResponse.js";
+import {Comment} from "../models/comment.models.js"
+import { Video } from "../models/video.models.js";
+import { Tweet } from "../models/tweet.models.js";
 const toggleVideoLike = AsyncHandler(async (req,res)=>{
         const {videoId} = req.params;
+        console.log("videoId",videoId)
         const user = req.user?._id
         console.log("req.params:",req.params)
         if(!videoId){
             throw new ApiError(404,"video not found")
         }
+
         if(!user){
             throw new ApiError(404,"unauthorized request")
         }
 
-        const isVideoExists  = await Like.findOne(videoId)
+        const isVideoExists = await Video.findOne({_id:videoId});
+
+        console.log("isVideoExists:",isVideoExists)
         if(!isVideoExists){
             throw new ApiError(404,"video not found in the database")
         }
@@ -23,18 +29,21 @@ const toggleVideoLike = AsyncHandler(async (req,res)=>{
             const existingLike = await Like.findOne({video:videoId , likedBy:user})
             if(existingLike){
                 await Like.deleteOne({_id:existingLike._id})
-                await Like.findByIdAndUpdate(videoId,{
-                    $inc:{
-                        count:-1
-                    }
-                })
+                await Video.findByIdAndUpdate(videoId, {
+                    $inc: { count: -1 },
+                    
+                  },{new:true});
+                  
                 return res.status(200).json( new ApiResponse(200,{},"video got disliked"))
             }else {
                 await Like.create({likedBy:user, video:videoId})
-                await Like.findByIdAndUpdate(videoId,{
+                await Video.findByIdAndUpdate(videoId,{
                     $inc:{
                         count:1
                     }
+                },
+                {
+                    new:true,
                 })
                 return res.status(200).json( new ApiResponse(200,{},"video liked"))
             }
@@ -61,18 +70,24 @@ const toggleCommentLike = AsyncHandler( async()=>{
     
             if(existingLike){
                 await Like.deleteMany({_id:existingLike._id})
-                await Like.findByIdAndUpdate(commentId,{
+                await Comment.findByIdAndUpdate(commentId,{
                     $inc:{
                         count:-1
                     }
+                },
+                {
+                    new:true,
                 })
                 return res.status(200).json( new ApiResponse(200,{},"comment got disliked"))
             }else{
                 await Like.create({comment:commentId,likedBy:user})
-                await Like.findByIdAndUpdate(commentId,{
+                await Comment.findByIdAndUpdate(commentId,{
                     $inc:{
                         count:1
                     }
+                },
+                {
+                    new:true,
                 })
 
                 return res.status(200).json( new ApiResponse(200,{},"liked comment"))
@@ -101,21 +116,27 @@ const toggleTweetLike = AsyncHandler( async (req,res)=>{
             const existingLike = await Like.findOne({likedBy:user,tweet:tweetId})
             if(existingLike){
                 await Like.deleteOne({_id:existingLike?._id})
-                await Like.findByIdAndUpdate(
+                await Tweet.findByIdAndUpdate(
                     tweetId,
                     {
                         $inc:{count:-1}
+                    },
+                    {
+                        new:true,
                     }
                 )
                 return res.status(200).json(new ApiResponse(200,{},"you disliked the video"))
             }else{
                 await Like.create({tweet:tweetId, likedBy:user})
-                await Like.findByIdAndUpdate(
+                await Tweet.findByIdAndUpdate(
                     tweetId,
                     {
                         $inc:{
                             count:1
                         }
+                    },
+                    {
+                        new:true,
                     }
                 )
                 return res.status(200).json(200,{},"you like the video")

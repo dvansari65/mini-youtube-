@@ -1,14 +1,19 @@
-import { Video } from "../models/video.models";
-import ApiError from "../utils/ApiError";
-import AsyncHandler from "../utils/AsyncHandler";
-import { User } from "../models/user.models";
-import ApiResponse from "../utils/ApiResponse";
-import { uploadOnCloudinary } from "../utils/cloudinary";
+import { Video } from "../models/video.models.js";
+import ApiError from "../utils/ApiError.js";
+import AsyncHandler from "../utils/AsyncHandler.js";
+import { User } from "../models/user.models.js";
+import ApiResponse from "../utils/ApiResponse.js";
+import { uploadOnCloudinary } from "../utils/cloudinary.js";
 import fs from "fs"
 const uploadVideosContent = AsyncHandler ( async (req,res)=>{
     const {thumbNail,title,description,duration,isPublished}  = req.body
-    const videoLocalPath = req.files?.path
 
+    if (!req.files || req.files.length === 0) {
+        throw new ApiError(401, "Please provide video file(s)");
+      }
+    
+    const videoLocalPath = req.files[0]?.path
+    console.log("videoLocalPath:",videoLocalPath)
     if(!videoLocalPath){
         throw new ApiError(401,"please provide video local path")
     }
@@ -105,45 +110,63 @@ const watchVideo = AsyncHandler(async (req,res)=>{
     )
 })
 
-const updateVideo = AsyncHandler( async (req,res)=>{
-    const {title,description,thumbNail} = req.body
-    const {videoId} = req.params
-    if(!videoId){
-        throw new ApiError(404,"please select the video")
+const updateVideo = AsyncHandler(async (req, res) => {
+    const { title, description, thumbNail } = req.body;
+    const { videoId } = req.params;
+    const user = req.user?._id;
+  
+    // Check if videoId and at least one field to update are provided
+    if (!videoId) {
+      throw new ApiError(400, "Video ID is required");
     }
-    const video = await Video.findById(videoId)
-    if(!video){
-        throw new ApiError(404,"video not found in the database")
+  
+    if (!title && !description && !thumbNail) {
+      throw new ApiError(
+        400,
+        "At least one field (title, description, or thumbnail) is required to update"
+      );
     }
-    const user = req.user?._id
-    if(!user){
-    throw new ApiError(404,"user not found")
+  
+    if (!user) {
+      throw new ApiError(401, "User not authenticated");
     }
-    if(video.owner.toString() !== user.toString()){
-        throw new ApiError(401,"unauthorized request")
+  
+    // Check if video exists
+    const video = await Video.findById(videoId);
+    if (!video) {
+      throw new ApiError(404, "Video not found in the database");
     }
-    let savedUpdates;
+  
+    // Check if user is the owner
+    if (video.owner.toString() !== user.toString()) {
+      throw new ApiError(403, "You are not authorized to update this video");
+    }
+  
+    // Prepare update object with only provided fields
+    const updateData = {};
+    if (title) updateData.title = title;
+    if (description) updateData.description = description;
+    if (thumbNail) updateData.thumbNail = thumbNail;
+  
     try {
-        if(title) video.title = title;
-        if(description) video.description = description;
-        if(thumbNail) video.thumbNail = thumbNail;
-    
-        savedUpdates = await video.save({validateBeforeSave:false})
+      const updatedVideo = await Video.findByIdAndUpdate(videoId, updateData, {
+        new: true,
+        runValidators: true, 
+      });
+  
+      if (!updatedVideo) {
+        throw new ApiError(500, "Video update failed");
+      }
+  
+      return res
+        .status(200)
+        .json(new ApiResponse(200, updatedVideo, "Video updated successfully"));
     } catch (error) {
-        throw new ApiError(500,"failed to save updated")
+      console.error("Video update failed:", error.message);
+      throw new ApiError(500, "Internal server error while updating video");
     }
-
-    return res
-    .status(200)
-    .json(
-        new ApiResponse(
-            200,
-            savedUpdates,
-            "updates have been saved"
-        )
-    )
-})
-
+  });
+  
 const deleteVideo = AsyncHandler (async (req,res)=>{
    const {videoId} = req.params
    const user = req.user?._id
