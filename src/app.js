@@ -20,6 +20,7 @@ import { likesRouter } from "./routes/likes.routes.js"
 import {commentRouter} from "./routes/coments.routes.js"
 import { playListRouter } from "./routes/playlist.routes.js"
 import {subscriptionRouter} from "./routes/subscription.route.js"
+import {dashboardRouter} from "./routes/dashboard.routes.js"
     app.use("/api/v1/users",userRouter)
     app.use("/api/v1/videos",videoRouter)
     app.use("/api/v1/likes",likesRouter)
@@ -27,5 +28,6 @@ import {subscriptionRouter} from "./routes/subscription.route.js"
     app.use("/api/v1/playList",playListRouter)
     app.use("/api/v1/tweet",tweetRouter)
     app.use("/api/v1/subscription",subscriptionRouter)
+    app.use("/api/v1/dashboard",dashboardRouter)
 
  export {app}
