@@ -1,13 +1,14 @@
 import mongoose from "mongoose";
 import mongooseAggregatePaginate from "mongoose-aggregate-paginate-v2";
+import { Schema } from "mongoose";
 const playListSchema = new Schema({
-    videos:{
+    videos:[{
         type:Schema.Types.ObjectId,
         ref:"Video",
         reqiured:true
-    },
+    }],
     title:{
-        type:string,
+        type:String,
         required:true
     },
     owner:{

@@ -4,7 +4,7 @@ import { Comment } from "../models/comment.models.js"
 import { Video } from "../models/video.models.js"
 import {Tweet} from "../models/tweet.models.js"
 import ApiResponse from "../utils/ApiResponse.js"
-
+import mongoose from "mongoose"
 
 const getAllComments = AsyncHandler( async (req,res)=>{
    const {videoId,tweetId} = req.query
@@ -136,7 +136,7 @@ const updateComent = AsyncHandler( async (req,res)=>{
     if(!user){
         throw new ApiError(401,"unauthorized request")
     }
-    if(!commentId){
+    if(!commentId || !mongoose.Types.ObjectId.isValid(commentId)){
         throw new ApiError(400,"please provide comment Id ")
     }
     const comment = await Comment.findById(commentId)
@@ -146,21 +146,12 @@ const updateComent = AsyncHandler( async (req,res)=>{
     if(user.toString() !== comment.owner.toString()){
         throw new ApiError(403,"there is no comments of yours ")
     }
-    const updatedComment = await Comment.updateOne(
-      {  _id:comment?._id},
-      {
-        $set:{
-            content:content
-        }
-      },
-      {
-        new:true
-      }
-    )
+    comment.content = content
+    await comment.save()
     return res
     .status(200)
     .json(
-        new ApiResponse(200,updatedComment,"comment updated successfully!")
+        new ApiResponse(200,comment,"comment updated successfully!")
     )
 
 })
