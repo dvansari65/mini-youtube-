@@ -9,7 +9,7 @@ function Layout() {
         <Header/>
         <div className="flex flex-1 overflow-hidden">
         <Sidebar/>
-            <main  className="flex-1 overflow-y-auto p-4 bg-gray-100 justify-center">
+            <main  className="flex-1 h-screen flex items-center justify-center   overflow-y-auto p-4 bg-gray-100">
                 <Outlet/>
             </main>
             
