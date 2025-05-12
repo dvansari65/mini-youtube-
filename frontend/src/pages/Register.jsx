@@ -1,27 +1,26 @@
 import React, { useState } from 'react'
-import { useNavigate } from 'react-router-dom';
-import { Link } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import axiosInstance from '../services/api';
 
 function Register() {
     const [formData, setFormData] = useState({
         userName: "",
-        fullName:"",
+        fullName: "",
         email: "",
         password: "",
         avatar: null,
         coverImage: null
     });
-    
     const [confirmPassword, setConfirmPassword] = useState("");
     const [error, setError] = useState('');
-    const [success,setSuccess]= useState('')
+    const [success, setSuccess] = useState('');
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
-    const handleClose = (e)=>{
+
+    const handleClose = (e) => {
         e.preventDefault();
-        navigate("/")
-}
+        navigate("/");
+    }
 
     const handleChange = (e) => {
         const { name, value, files } = e.target;
@@ -40,9 +39,6 @@ function Register() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        console.log('Form submitted');
-        console.log('Form data:', formData);
-        
         if (confirmPassword !== formData.password) {
             setError("Passwords do not match!");
             return;
@@ -53,34 +49,38 @@ function Register() {
         try {
             const data = new FormData();
             data.append("userName", formData.userName);
-            data.append("fullName", formData.fullName); 
+            data.append("fullName", formData.fullName);
             data.append("email", formData.email);
             data.append("password", formData.password);
             if (formData.avatar) data.append("avatar", formData.avatar);
             if (formData.coverImage) data.append("coverImage", formData.coverImage);
 
+            console.log('Sending registration request...');
             const response = await axiosInstance.post(
-               "/users/register",
-               data,
-               {
-                headers: {
-                    'Content-Type': 'multipart/form-data'
+                "/api/v1/users/register",
+                data,
+                {
+                    headers: {
+                        'Content-Type': 'multipart/form-data'
+                    }
                 }
-               }
-            )
-            console.log('Registration successful:', response.data);
-            navigate("/");
+            );
+
+            console.log('Registration response:', response.data);
             
-            if (success) {
-                console.log('Registration successful');
-                setSuccess(success.response?.data?.message || "user registered succesfully")
-                navigate("/home");
-            } else {
-                console.log('Registration failed');
+            if (response.data.success) {
+                setSuccess("Registration successful! Redirecting to login...");
+                // Store the token if it's in the response
+                if (response.data.token) {
+                    localStorage.setItem('token', response.data.token);
+                }
+                setTimeout(() => {
+                    navigate("/login");
+                }, 2000);
             }
         } catch (error) {
             console.error('Registration error:', error);
-            setError(error.response?.data?.message || "user already existed. Please try again.");
+            setError(error.response?.data?.message || "Registration failed. Please try again.");
         } finally {
             setLoading(false);
         }
@@ -88,16 +88,17 @@ function Register() {
 
     return (
         <div className="min-h-screen flex justify-center items-center bg-gray-100">
-            
             <div className="bg-white p-8 rounded-lg shadow-md w-96">
-                <div className='flex flex-row justify-between '>
-                <h2 className="text-2xl font-semibold text-center mb-4">Create an Account</h2>
-                <button
-                onClick={handleClose}
-                className='text-red-600 -mt-5'  
-                >close</button>
+                <div className='flex flex-row justify-between'>
+                    <h2 className="text-2xl font-semibold text-center mb-4">Create an Account</h2>
+                    <button
+                        onClick={handleClose}
+                        className='text-red-600 -mt-5'
+                    >close</button>
                 </div>
-                {(error && <div className="text-red-500 text-center mb-4">{error}</div>) || (success && <div className="text-blue-600 text-center mb-4">{success}</div>)}
+                {(error && <div className="text-red-500 text-center mb-4">{error}</div>) || 
+                 (success && <div className="text-green-600 text-center mb-4">{success}</div>)}
+                
                 <form onSubmit={handleSubmit}>
                     <div className="mb-4">
                         <label className="block text-sm font-medium text-gray-600">Username</label>
@@ -111,8 +112,9 @@ function Register() {
                             required
                         />
                     </div>
+
                     <div className="mb-4">
-                        <label className="block text-sm font-medium text-gray-600">full name</label>
+                        <label className="block text-sm font-medium text-gray-600">Full Name</label>
                         <input
                             type="text"
                             name="fullName"
@@ -192,7 +194,7 @@ function Register() {
                         {loading ? 'Registering...' : 'Register'}
                     </button>
                     <p className='m-2 p-2 flex justify-center align-middle'>
-                        already have an account? <Link to="/login">Login</Link>
+                        Already have an account? <Link to="/login" className="text-blue-500 hover:text-blue-700">Login</Link>
                     </p>
                 </form>
             </div>

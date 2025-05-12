@@ -11,7 +11,7 @@ function UploadVideo() {
   const [description, setDescription] = useState('');
   const [isPublished, setIsPublished] = useState(false);
   const [duration, setDuration] = useState('');
-  const [videoFile, setVideoFile] = useState(null);
+  const [videos, setVideos] = useState(null);
   const navigate = useNavigate();
 
   const handleUpload = async () => {
@@ -22,9 +22,9 @@ function UploadVideo() {
     formData.append('title', title);
     formData.append('thumbNail', thumbNail);
     formData.append('description', description);
-    formData.append('isPublished', isPublished);
+    formData.append('isPublished', isPublished.toString());
     formData.append('duration', duration);
-    formData.append('videoFile', videoFile);
+    formData.append('videos', videos);
 
     try {
       const response = await axiosInstance.post('/videos/upload-content', formData, {
@@ -40,8 +40,9 @@ function UploadVideo() {
       }
 
       console.log('Video uploaded:', response.data);
-      
+      setError("")
       navigate('/');
+
     } catch (err) {
       console.error('Upload failed:', err);
       setError('Video upload failed.');
@@ -64,13 +65,6 @@ function UploadVideo() {
               onChange={(e) => setTitle(e.target.value)}
             />
 
-            <input
-              type="file"
-              accept="image/*"
-              className="border p-2 w-full mb-2"
-              onChange={(e) => setThumbNail(e.target.files[0])}
-            />
-
             <textarea
               placeholder="Description"
               className="border p-2 w-full mb-2"
@@ -85,12 +79,21 @@ function UploadVideo() {
               value={duration}
               onChange={(e) => setDuration(e.target.value)}
             />
+            <input
+              type="file"
+              placeholder='select image'
+              accept="image/*"
+              className="border p-2 w-full mb-2"
+              onChange={(e) => setThumbNail(e.target.files[0])}
+            />
+
 
             <input
               type="file"
+              placeholder='select video'
               accept="video/*"
               className="border p-2 w-full mb-2"
-              onChange={(e) => setVideoFile(e.target.files[0])}
+              onChange={(e) => setVideos(e.target.files[0])}
             />
 
             <label className="flex items-center space-x-2 mb-2">
