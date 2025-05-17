@@ -16,18 +16,22 @@ const toggleSubscription = AsyncHandler( async(req,res)=>{
    try {
     const existingSubscription = await Subscription.findOne({subcriber:user,channel:channelId})
     if(!existingSubscription){
-        await Subscription.create({
+        const newSubscription= await Subscription.create({
             subcriber:user,
             channel:channelId
+        },{
+            new:true
         })
-        return res.status(200).json(new ApiResponse(200,{},"channel subscribed"))
+        return res.status(200).json(new ApiResponse(200,{subcribed:true , newSubscription:newSubscription},"channel subscribed"))
     }else{
         
-        await Subscription.findOneAndDelete({
+       const newSubscription= await Subscription.findOneAndDelete({
             subcriber:user,
             channel:channelId
+        },{
+            new:true
         })
-        return res.status(200).json(new ApiResponse(200,{},"channel unsubscribed"))
+        return res.status(200).json(new ApiResponse(200,{subcribed:false,newSubscription},"channel unsubscribed"))
     }
    } catch (error) {
     console.log("something went wrong",error.stack)
@@ -79,4 +83,24 @@ const getSubcribedChannel = AsyncHandler( async (req,res)=>{
         new ApiResponse(200,{countSubscribedToChannel,subscribedTo:subscribedChannel},"here is your subscribed channel")
     )
 })
-export {toggleSubscription,getChannelSubcribers,getSubcribedChannel}
+const isSubscribed = AsyncHandler( async(req,res)=>{
+    const user = req.user?._id
+    const {channelId} = req.query
+    console.log("channel id:",channelId)
+    console.log("user:",user)
+    if( !channelId){
+        throw new ApiError(404," channelId is missing")
+    }
+    if(!user){
+        throw new ApiError(404,"user is missing ")
+    }
+    const existingSubscription = await Subscription.findOne({subcriber:user,channel:channelId})
+    if(channelId == user){
+        new ApiResponse(200,{subscribed:!!existingSubscription},"subscription status")
+    }
+    return res.status(200).json(
+        new ApiResponse(200,{subscribed:!!existingSubscription},"subscription status")
+    )
+    
+})
+export {toggleSubscription,getChannelSubcribers,getSubcribedChannel,isSubscribed}

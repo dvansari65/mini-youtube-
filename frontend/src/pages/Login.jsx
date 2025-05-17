@@ -21,6 +21,7 @@ function Login() {
             setLoading(true)
            
             const success =  await login(formData.userName,formData.password)
+            console.log("succes res:",success)
             if(success){
              setError("")
              navigate("/")

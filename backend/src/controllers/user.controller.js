@@ -191,6 +191,7 @@ const refreshTokenForUser = AsyncHandler( async (req,res)=>{
             secure: false,
             sameSite:"Lax"
         };
+        console.log("Cookies set:", res.getHeaders()["set-cookie"]);
         return res
         .status(200)
         .cookie("refreshToken",newRefreshToken,options)
@@ -204,7 +205,7 @@ const refreshTokenForUser = AsyncHandler( async (req,res)=>{
                 "Refreshtoken created successfully!!"
             )
         )
-
+        
         
       } catch (error) {
         throw new ApiError(401,"invalid user")

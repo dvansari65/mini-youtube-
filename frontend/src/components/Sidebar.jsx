@@ -1,10 +1,11 @@
 import React from 'react';
 import { HeartIcon, UserPlusIcon, SettingsIcon ,UploadIcon,VideoIcon} from 'lucide-react';
 import { Link } from 'react-router-dom';
-import UploadVideo from '../pages/uploadVideo';
+
 const Sidebar = () => {
   return (
-    <aside className="w-48 h-screen bg-gray-900 text-white p-4 flex flex-col space-y-6">
+    <div className='flex flex-cols justify-center items-center mr-0 ml-0 w-1/8 h-17/18 mt-25'>
+      <aside className="   w-full h-screen  bg-gray-900 text-white p-4 flex flex-col space-y-6">
       <SidebarItem icon={<UserPlusIcon size={20} />} label="Subscriptions" to="/subscriptions" />
       <SidebarItem icon={<HeartIcon size={20} />} label="Liked Videos" to="/liked" />
       <SidebarItem icon={<UploadIcon size={20} />} label="Upload Video" to="/upload-content" />
@@ -12,6 +13,7 @@ const Sidebar = () => {
       <SidebarItem icon={<SettingsIcon size={20} />} label="Settings" to="/settings" />
      
     </aside>
+    </div>
   );
 };
 

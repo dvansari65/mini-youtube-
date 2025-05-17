@@ -17,41 +17,36 @@ const toggleVideoLike = AsyncHandler(async (req,res)=>{
         if(!user){
             throw new ApiError(404,"unauthorized request")
         }
-
-        const isVideoExists = await Video.findOne({_id:videoId});
-
-        console.log("isVideoExists:",isVideoExists)
-        if(!isVideoExists){
-            throw new ApiError(404,"video not found in the database")
+        const video = await Video.findById(videoId)
+        if(!video){
+            throw new ApiError(404,"video not found")
         }
-        
+        console.log("video:",video)
+        const hasLiked = video.likes.includes(user)
         try {
-            const existingLike = await Like.findOne({video:videoId , likedBy:user})
-            if(existingLike){
-                await Like.deleteOne({_id:existingLike._id})
-                await Video.findByIdAndUpdate(videoId, {
-                    $inc: { count: -1 },
-                    
-                  },{new:true});
-                  
-                return res.status(200).json( new ApiResponse(200,{},"video got disliked"))
-            }else {
-                await Like.create({likedBy:user, video:videoId})
-                await Video.findByIdAndUpdate(videoId,{
-                    $inc:{
-                        count:1
-                    }
-                },
-                {
-                    new:true,
-                })
-                return res.status(200).json( new ApiResponse(200,{},"video liked"))
+            if(hasLiked){
+                 video.likes.pull(user)
+                 await video.save();
+                 return res.status(200).json(
+                    new ApiResponse(200,{
+                        liked:false,
+                        updatedVideoLikes:video.likes.length
+                    })
+                 )
             }
+            if(!hasLiked){
+                video.likes.push(user)
+                await video.save();
+                return res.status(200).json(
+                   new ApiResponse(200,{
+                       liked:true,
+                       updatedVideoLikes:video.likes.length
+                   })
+                )
+           }
         } catch (error) {
-            console.error("Error toggling video like:", error.message);
-            throw new ApiError(500, "Something went wrong while toggling video like");
+            console.error("something went wrong while toggling the video",error)
         }
-        
 })
 
 const toggleCommentLike = AsyncHandler( async()=>{

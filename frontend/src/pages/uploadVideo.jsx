@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import axiosInstance from '../services/api';
 import { NavLink, useNavigate } from 'react-router-dom';
 
+
 function UploadVideo() {
   
   const [error, setError] = useState('');
@@ -13,11 +14,10 @@ function UploadVideo() {
   const [duration, setDuration] = useState('');
   const [videos, setVideos] = useState(null);
   const navigate = useNavigate();
-
+  
   const handleUpload = async () => {
     setError('');
     setLoading(true);
-
     const formData = new FormData();
     formData.append('title', title);
     formData.append('thumbNail', thumbNail);
@@ -42,36 +42,32 @@ function UploadVideo() {
       console.log('Video uploaded:', response.data);
       setError("")
       navigate('/');
-
-    } catch (err) {
+      } catch (err) {
       console.error('Upload failed:', err);
       setError('Video upload failed.');
-    } finally {
+      } finally {
       setLoading(false);
-    }
+      }
   };
 
   return (
     <>
-      <div className="flex justify-center items-center -mt-20 p-6 w-full">
+      <div className="flex justify-center items-center -mt-20 p-6 w-full bg">
           <div className="bg-white rounded-lg p-6 w-full max-w-xl relative">
             <h2 className="text-xl font-bold mb-4">Upload Video</h2>
-
-            <input
+              <input
               type="text"
               placeholder="Title"
               className="border p-2 w-full mb-2"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
             />
-
             <textarea
               placeholder="Description"
               className="border p-2 w-full mb-2"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
             />
-
             <input
               type="number"
               placeholder="Duration (in seconds)"
@@ -87,7 +83,6 @@ function UploadVideo() {
               onChange={(e) => setThumbNail(e.target.files[0])}
             />
 
-
             <input
               type="file"
               placeholder='select video'
@@ -95,7 +90,6 @@ function UploadVideo() {
               className="border p-2 w-full mb-2"
               onChange={(e) => setVideos(e.target.files[0])}
             />
-
             <label className="flex items-center space-x-2 mb-2">
               <input
                 type="checkbox"

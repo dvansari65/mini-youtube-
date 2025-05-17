@@ -3,7 +3,7 @@ import { Github, Instagram, Linkedin } from 'lucide-react';
 
 const Footer = () => {
   return (
-    <footer className="bg-blue-400 text-white py-4">
+    <footer className="bg-blue-400 text-white  py-4 h-1/18">
       <div className="container mx-auto flex flex-col md:flex-row justify-between items-center px-4">
         <p className="text-sm">&copy; {new Date().getFullYear()} MiniTube. All rights reserved.</p>
 

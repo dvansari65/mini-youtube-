@@ -1,18 +1,21 @@
-
 import React from 'react'
 import { useUser } from '../context/authcontext'
-import {  Outlet, Navigate } from 'react-router-dom'
-function ProtectedRoute({children}) {
-    const {user,loading} = useUser()
+import { Navigate } from 'react-router-dom'
+
+function ProtectedRoute({ children }) {
+    const { user, loading } = useUser()
+   
     
-    if(loading){
-      return <div>loading....</div>
+    if (loading) {
+        return 
     }
-    if(!user){
-      <Navigate to="/login" />
+
+    if (!user) {
+        // Redirect to login but save the attempted url
+        return <Navigate to="/login" replace />
     }
-    return children? children : <Outlet/>;
-  
+
+    return children
 }
 
 export default ProtectedRoute

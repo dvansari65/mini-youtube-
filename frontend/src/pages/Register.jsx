@@ -69,13 +69,13 @@ function Register() {
             console.log('Registration response:', response.data);
             
             if (response.data.success) {
-                setSuccess("Registration successful! Redirecting to login...");
+                setSuccess("Registration successful! Redirecting to home...");
                 // Store the token if it's in the response
                 if (response.data.token) {
                     localStorage.setItem('token', response.data.token);
                 }
                 setTimeout(() => {
-                    navigate("/login");
+                    navigate("/");
                 }, 2000);
             }
         } catch (error) {

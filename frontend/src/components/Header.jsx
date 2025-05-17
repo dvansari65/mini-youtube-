@@ -21,7 +21,9 @@ const Header = () => {
 
 
   return (
-    <header className="flex justify-between items-center p-4 bg-blue-400">
+    <header className="fixed top-0 left-0 right-0 h-1/18 z-50 flex justify-between items-center p-4 bg-blue-400 shadow ">
+
+
       <div className="text-white">
         <h1 className="text-2xl font-bold">youTube</h1>
       </div>

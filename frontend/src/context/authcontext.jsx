@@ -18,7 +18,7 @@ export const UserProvider = ({ children }) => {
   // Check if user is already logged in (e.g., check localStorage)
   useEffect(() => {
     const storedUserRaw  = localStorage.getItem("user")
-    if(storedUserRaw){
+    if(storedUserRaw && storedUserRaw !== "undefined"){
         try {
           const storedUser = JSON.parse(storedUserRaw)
           setUser(storedUser)
@@ -31,12 +31,12 @@ export const UserProvider = ({ children }) => {
   }, []);
 
   
-
-  // Login function
   const login = async (userName, password) => {
     try {
       const response = await axiosInstance.post('/users/login', { userName, password });
-      const loggedInUser = response.data.user;
+      const loggedInUser = response.data.data.loggedInUser;
+      console.log("Login response:", response.data);
+
       localStorage.setItem('user', JSON.stringify(loggedInUser));
       setUser(loggedInUser);
       setError(null);

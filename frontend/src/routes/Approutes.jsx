@@ -1,21 +1,25 @@
 import React from 'react'
+
+import { Routes,Route, Navigate } from 'react-router-dom'
 import Layout from '../utils/Layout'
-import { Routes,Route } from 'react-router-dom'
-import ProtectedRoute from "../components/ProtectedRoute"
-import UploadVideo from '../pages/uploadVideo'
+import UploadVideo from '../pages/UploadVideo'
 import Home from "../pages/Home"
 import Login from "../pages/Login"
-import Register from "../pages/Register"
+import WatchVideo from '../pages/watchVideo'
+import Register from '../pages/register'
+
+import { useUser } from '../context/authcontext'
 function Approutes() {
+  const {user} = useUser()
   return (
     <Routes>
-        <Route element={<ProtectedRoute><Layout/></ProtectedRoute>}>
-        <Route path="/" element={<Home/>}/>
-        <Route path="/upload-content" element={<UploadVideo/>}/>
-        </Route>
-        <Route path="/login" element={<Login/>}/>
-        <Route path="/register" element={<Register/>}/>
-       
+      <Route element={<Layout/>}>
+      <Route path='/' element={user? <Home/> : <Navigate to={"/login"}/>} />
+      <Route path='/upload-content' element={user? <UploadVideo/> : <Navigate to={"/login"}/>} />
+      <Route path='/watch-video/:videoId' element={user? <WatchVideo/> : <Navigate to={"/login"}/>} />
+      </Route>
+      <Route path='/register' element={ <Register/> } />
+      <Route path='/login' element={ <Login/>} />
     </Routes>
   )
 }

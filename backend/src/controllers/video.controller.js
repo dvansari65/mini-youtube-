@@ -94,6 +94,7 @@ const uploadVideosContent = AsyncHandler ( async (req,res)=>{
 
 const watchVideo = AsyncHandler(async (req,res)=>{
     const {videoId} = req.params
+
     console.log("req.params:",req.params)
     if(!videoId){
         throw new ApiError(401,"something is wrong with video")
@@ -103,7 +104,12 @@ const watchVideo = AsyncHandler(async (req,res)=>{
     if(!video){
         throw new ApiError(404,"video not found")
     }
-
+    console.log("owner",video.owner)
+    const user = await User.findById(video.owner._id)
+    if(!user){
+      throw new ApiError(404,"user not found")
+    }
+    console.log("user:",user)
     video.views = (video.views || 0) + 1;
 
     await video.save({validateBeforeSave:false})
@@ -119,7 +125,11 @@ const watchVideo = AsyncHandler(async (req,res)=>{
                 title:video.title,
                 description:video.description,
                 owner:video.owner,
-                views:video.views
+                views:video.views,
+                videoFile:video.videoFile,
+                thumbNail:video.thumbNail,
+                avatar:user.avatar || null,
+                likes:video.likes.length || 0
             },
             "video watched by user"
         )
