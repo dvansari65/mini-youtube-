@@ -1,6 +1,7 @@
-import React, { useState } from 'react'
+import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import axiosInstance from '../services/api';
+import { UserCircle, Mail, Lock, Image, Upload } from 'lucide-react';
 
 function Register() {
     const [formData, setFormData] = useState({
@@ -17,10 +18,7 @@ function Register() {
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
 
-    const handleClose = (e) => {
-        e.preventDefault();
-        navigate("/");
-    }
+    
 
     const handleChange = (e) => {
         const { name, value, files } = e.target;
@@ -57,7 +55,7 @@ function Register() {
 
             console.log('Sending registration request...');
             const response = await axiosInstance.post(
-                "/api/v1/users/register",
+                "/users/register",
                 data,
                 {
                     headers: {
@@ -70,9 +68,10 @@ function Register() {
             
             if (response.data.success) {
                 setSuccess("Registration successful! Redirecting to home...");
-                // Store the token if it's in the response
-                if (response.data.token) {
-                    localStorage.setItem('token', response.data.token);
+                // Store both token and user data
+                if (response.data.data) {
+                    localStorage.setItem('token', response.data.data.accessToken);
+                    localStorage.setItem('user', JSON.stringify(response.data.data.loggedInUser));
                 }
                 setTimeout(() => {
                     navigate("/");
@@ -87,115 +86,191 @@ function Register() {
     };
 
     return (
-        <div className="min-h-screen flex justify-center items-center bg-gray-100">
-            <div className="bg-white p-8 rounded-lg shadow-md w-96">
-                <div className='flex flex-row justify-between'>
-                    <h2 className="text-2xl font-semibold text-center mb-4">Create an Account</h2>
-                    <button
-                        onClick={handleClose}
-                        className='text-red-600 -mt-5'
-                    >close</button>
-                </div>
-                {(error && <div className="text-red-500 text-center mb-4">{error}</div>) || 
-                 (success && <div className="text-green-600 text-center mb-4">{success}</div>)}
-                
-                <form onSubmit={handleSubmit}>
-                    <div className="mb-4">
-                        <label className="block text-sm font-medium text-gray-600">Username</label>
-                        <input
-                            type="text"
-                            name="userName"
-                            className="w-full p-2 border border-gray-300 rounded-md"
-                            placeholder="Enter your username"
-                            value={formData.userName}
-                            onChange={handleChange}
-                            required
-                        />
-                    </div>
-
-                    <div className="mb-4">
-                        <label className="block text-sm font-medium text-gray-600">Full Name</label>
-                        <input
-                            type="text"
-                            name="fullName"
-                            className="w-full p-2 border border-gray-300 rounded-md"
-                            placeholder="Enter your full name"
-                            value={formData.fullName}
-                            onChange={handleChange}
-                            required
-                        />
-                    </div>
-
-                    <div className="mb-4">
-                        <label className="block text-sm font-medium text-gray-600">Email</label>
-                        <input
-                            type="email"
-                            name="email"
-                            className="w-full p-2 border border-gray-300 rounded-md"
-                            placeholder="Enter your email"
-                            value={formData.email}
-                            onChange={handleChange}
-                            required
-                        />
-                    </div>
-
-                    <div className="mb-4">
-                        <label className="block text-sm font-medium text-gray-600">Password</label>
-                        <input
-                            type="password"
-                            name="password"
-                            className="w-full p-2 border border-gray-300 rounded-md"
-                            placeholder="Enter your password"
-                            value={formData.password}
-                            onChange={handleChange}
-                            required
-                        />
-                    </div>
-
-                    <div className="mb-6">
-                        <label className="block text-sm font-medium text-gray-600">Confirm Password</label>
-                        <input
-                            type="password"
-                            className="w-full p-2 border border-gray-300 rounded-md"
-                            placeholder="Confirm your password"
-                            value={confirmPassword}
-                            onChange={(e) => setConfirmPassword(e.target.value)}
-                            required
-                        />
-                    </div>
-
-                    <div className="mb-4">
-                        <label className="text-sm text-gray-600">Avatar</label>
-                        <input
-                            name="avatar"
-                            type="file"
-                            accept="image/*"
-                            onChange={handleChange}
-                            className="w-full"
-                        />
-                    </div>
-
-                    <div className="mb-4">
-                        <label className="text-sm text-gray-600">Cover Image</label>
-                        <input
-                            name="coverImage"
-                            type="file"
-                            accept="image/*"
-                            onChange={handleChange}
-                            className="w-full"
-                        />
-                    </div>
-
-                    <button
-                        type="submit"
-                        className="w-full p-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:opacity-50"
-                        disabled={loading}
-                    >
-                        {loading ? 'Registering...' : 'Register'}
-                    </button>
-                    <p className='m-2 p-2 flex justify-center align-middle'>
-                        Already have an account? <Link to="/login" className="text-blue-500 hover:text-blue-700">Login</Link>
+        <div className="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8">
+            <div className="max-w-md w-full space-y-8 bg-white dark:bg-gray-800 p-8 rounded-xl shadow-lg">
+                <div>
+                    <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900 dark:text-white">
+                        Create your account
+                    </h2>
+                    <p className="mt-2 text-center text-sm text-gray-600 dark:text-gray-400">
+                        Join our community and start sharing your videos
                     </p>
+                </div>
+
+                {error && (
+                    <div className="bg-red-50 dark:bg-red-900/50 text-red-500 dark:text-red-200 p-4 rounded-lg text-sm">
+                        {error}
+                    </div>
+                )}
+
+                {success && (
+                    <div className="bg-green-50 dark:bg-green-900/50 text-green-500 dark:text-green-200 p-4 rounded-lg text-sm">
+                        {success}
+                    </div>
+                )}
+
+                <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+                    <div className="space-y-4">
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                Username
+                            </label>
+                            <div className="mt-1 relative">
+                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <UserCircle className="h-5 w-5 text-gray-400" />
+                                </div>
+                                <input
+                                    type="text"
+                                    name="userName"
+                                    required
+                                    value={formData.userName}
+                                    onChange={handleChange}
+                                    className="appearance-none block w-full pl-10 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                                    placeholder="Enter your username"
+                                />
+                            </div>
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                Full Name
+                            </label>
+                            <div className="mt-1 relative">
+                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <UserCircle className="h-5 w-5 text-gray-400" />
+                                </div>
+                                <input
+                                    type="text"
+                                    name="fullName"
+                                    required
+                                    value={formData.fullName}
+                                    onChange={handleChange}
+                                    className="appearance-none block w-full pl-10 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                                    placeholder="Enter your full name"
+                                />
+                            </div>
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                Email
+                            </label>
+                            <div className="mt-1 relative">
+                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <Mail className="h-5 w-5 text-gray-400" />
+                                </div>
+                                <input
+                                    type="email"
+                                    name="email"
+                                    required
+                                    value={formData.email}
+                                    onChange={handleChange}
+                                    className="appearance-none block w-full pl-10 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                                    placeholder="Enter your email"
+                                />
+                            </div>
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                Password
+                            </label>
+                            <div className="mt-1 relative">
+                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <Lock className="h-5 w-5 text-gray-400" />
+                                </div>
+                                <input
+                                    type="password"
+                                    name="password"
+                                    required
+                                    value={formData.password}
+                                    onChange={handleChange}
+                                    className="appearance-none block w-full pl-10 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                                    placeholder="Create a password"
+                                />
+                            </div>
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                Confirm Password
+                            </label>
+                            <div className="mt-1 relative">
+                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <Lock className="h-5 w-5 text-gray-400" />
+                                </div>
+                                <input
+                                    type="password"
+                                    required
+                                    value={confirmPassword}
+                                    onChange={(e) => setConfirmPassword(e.target.value)}
+                                    className="appearance-none block w-full pl-10 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                                    placeholder="Confirm your password"
+                                />
+                            </div>
+                        </div>
+
+                        <div className="space-y-4">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                    Profile Picture
+                                </label>
+                                <div className="mt-1 flex items-center">
+                                    <div className="relative w-full">
+                                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                            <Image className="h-5 w-5 text-gray-400" />
+                                        </div>
+                                        <input
+                                            type="file"
+                                            name="avatar"
+                                            accept="image/*"
+                                            onChange={handleChange}
+                                            className="appearance-none block w-full pl-10 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                    Cover Image
+                                </label>
+                                <div className="mt-1 flex items-center">
+                                    <div className="relative w-full">
+                                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                            <Upload className="h-5 w-5 text-gray-400" />
+                                        </div>
+                                        <input
+                                            type="file"
+                                            name="coverImage"
+                                            accept="image/*"
+                                            onChange={handleChange}
+                                            className="appearance-none block w-full pl-10 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <button
+                            type="submit"
+                            disabled={loading}
+                            className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                        >
+                            {loading ? 'Creating account...' : 'Create Account'}
+                        </button>
+                    </div>
+
+                    <div className="text-center">
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                            Already have an account?{' '}
+                            <Link to="/login" className="font-medium text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300">
+                                Sign in
+                            </Link>
+                        </p>
+                    </div>
                 </form>
             </div>
         </div>

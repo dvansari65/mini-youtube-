@@ -7,8 +7,9 @@ import Home from "../pages/Home"
 import Login from "../pages/Login"
 import WatchVideo from '../pages/watchVideo'
 import Register from '../pages/register'
-
+import MyProfile from '../pages/myProfile'
 import { useUser } from '../context/authcontext'
+import LikedVideos from '../pages/LikedVideos'
 function Approutes() {
   const {user} = useUser()
   return (
@@ -17,6 +18,8 @@ function Approutes() {
       <Route path='/' element={user? <Home/> : <Navigate to={"/login"}/>} />
       <Route path='/upload-content' element={user? <UploadVideo/> : <Navigate to={"/login"}/>} />
       <Route path='/watch-video/:videoId' element={user? <WatchVideo/> : <Navigate to={"/login"}/>} />
+      <Route path='/my-profile' element={user? <MyProfile/> : <Navigate to={"/login"}/>} />
+      <Route path='/liked-videos' element={user? <LikedVideos/> : <Navigate to={"/login"}/>} />
       </Route>
       <Route path='/register' element={ <Register/> } />
       <Route path='/login' element={ <Login/>} />

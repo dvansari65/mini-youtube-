@@ -17,7 +17,7 @@ export const UserProvider = ({ children }) => {
   
   // Check if user is already logged in (e.g., check localStorage)
   useEffect(() => {
-    const storedUserRaw  = localStorage.getItem("user")
+    const storedUserRaw = localStorage.getItem("user")
     if(storedUserRaw && storedUserRaw !== "undefined"){
         try {
           const storedUser = JSON.parse(storedUserRaw)
@@ -25,6 +25,7 @@ export const UserProvider = ({ children }) => {
         } catch (error) {
           console.error("Error parsing stored user:",error)
           localStorage.removeItem("user")
+          localStorage.removeItem("token")
         }
     }
     setLoading(false);
@@ -38,7 +39,9 @@ export const UserProvider = ({ children }) => {
       console.log("Login response:", response.data);
 
       localStorage.setItem('user', JSON.stringify(loggedInUser));
+      localStorage.setItem('token', response.data.data.accessToken);
       setUser(loggedInUser);
+      
       setError(null);
       return true;
     } catch (err) {
@@ -50,6 +53,7 @@ export const UserProvider = ({ children }) => {
   // Logout function
   const logout = () => {
     localStorage.removeItem('user'); // Remove user info from localStorage
+    localStorage.removeItem('token'); // Remove token from localStorage
     setUser(null);
    
   };
