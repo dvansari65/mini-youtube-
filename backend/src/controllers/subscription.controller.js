@@ -2,54 +2,78 @@ import ApiError from "../utils/ApiError.js";
 import AsyncHandler from "../utils/AsyncHandler.js";
 import { Subscription } from "../models/subscription.models.js";
 import ApiResponse from "../utils/ApiResponse.js";
+import {User} from "../models/user.models.js"
 
-
-const toggleSubscription = AsyncHandler( async(req,res)=>{
-
-    const {channelId} = req.query
-    const user = req.user._id
-    console.log("user:",user)
-    
-   if(!user){
-    throw new ApiError(404,"user not provide")
-   }
-   try {
-    const existingSubscription = await Subscription.findOne({subcriber:user,channel:channelId})
-    if(!existingSubscription){
-        const newSubscription= await Subscription.create({
-            subcriber:user,
-            channel:channelId
-        },{
-            new:true
-        })
-        return res.status(200).json(new ApiResponse(200,{subcribed:true , newSubscription:newSubscription},"channel subscribed"))
-    }else{
-        
-       const newSubscription= await Subscription.findOneAndDelete({
-            subcriber:user,
-            channel:channelId
-        },{
-            new:true
-        })
-        return res.status(200).json(new ApiResponse(200,{subcribed:false,newSubscription},"channel unsubscribed"))
+const toggleSubscription = AsyncHandler(async (req, res) => {
+    const { channelId } = req.query;
+    const user = req.user._id;
+    if(!channelId || !user){
+       throw new ApiError(400,"user id or channel id not provided")
     }
-   } catch (error) {
-    console.log("something went wrong",error.stack)
-    throw new ApiError(500,"something went wrong")
-   }
-})
+    try {
+
+        const subscription = await Subscription.findOne({
+            channel:channelId,
+            subscriber:user
+        })
+        if(!subscription){
+             await Subscription.create(
+                {
+                    channel:channelId,
+                    subscriber:user,
+                }
+            )
+            const updatedChannel = await User.findByIdAndUpdate(
+                channelId,
+                {$inc:{subscriberCount:1}},
+                {new:true}
+            )
+            return res
+            .status(200)
+            .json(
+                new ApiResponse(200,{isSubscribed:true,subscribeCount:updatedChannel.subscriberCount},"channel subscribed successfully")
+            )
+        }else{
+            await Subscription.deleteOne(
+                {
+                    channel:channelId,
+                    subscriber:user,
+                }
+            )
+            const currentChannel = await User.findById(channelId);
+            const newCount = Math.max((currentChannel.subscriberCount || 0) - 1, 0);
+      
+            const updatedChannel = await User.findByIdAndUpdate(
+              channelId,
+              { subscriberCount: newCount },
+              { new: true }
+            );
+            return res
+            .status(200)
+            .json(
+                new ApiResponse(200,{isSubscribed:false,subscribeCount:updatedChannel.subscriberCount},"channel unSubscribed successfully")
+            )
+
+        }
+        
+    } catch (error) {
+        console.error("something went wrong while toggling the subscription",error)
+        throw new ApiError(500,"something went wrong while toggling the subscription")
+    }
+});
+
 
 const getChannelSubcribers = AsyncHandler( async (req,res)=>{
-    const {channelId} = req.params
-    const user = req.user._id
-    if(!channelId){
-        throw new ApiError(404,"please provide channel id ")
-    }
+    
+    const user = req.user
+    
     if(!user){
         throw new ApiError(404,"user not found ")
     }
-    const subcribersOfChannel = await Subscription.find({channel:user}).populate("subscriber","userName")
-    console.log("subcribersOfChannel:",subcribersOfChannel)
+    console.log("user:",user)
+    const subcribersOfChannel = await Subscription.find({channel:user})
+   
+    
     if(!subcribersOfChannel){
         throw new ApiError(404,"there is no any subscriber of this channel ")
     }
@@ -57,6 +81,7 @@ const getChannelSubcribers = AsyncHandler( async (req,res)=>{
     if(subscriberCount== undefined){
         throw new ApiError(404," subscriber Count can not be count")
     }
+    
     return res
     .status(200)
     .json(
@@ -69,7 +94,7 @@ const getSubcribedChannel = AsyncHandler( async (req,res)=>{
     if(!user){
         throw new ApiError(404,"user not found")
     }
-    const subscribedChannel = await Subscription.find({subcriber:user}).populate("channel","userName")
+    const subscribedChannel = await Subscription.find({subcriber:user}).populate("channel","userName avatar")
     if(!subscribedChannel){
         throw new ApiError(404,"there is no any channel you subscribed")
     }

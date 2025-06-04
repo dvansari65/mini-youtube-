@@ -10,6 +10,8 @@ import Register from '../pages/register'
 import MyProfile from '../pages/myProfile'
 import { useUser } from '../context/authcontext'
 import LikedVideos from '../pages/LikedVideos'
+import SearchResult from '../pages/SearchResult'
+
 function Approutes() {
   const {user} = useUser()
   return (
@@ -20,6 +22,7 @@ function Approutes() {
       <Route path='/watch-video/:videoId' element={user? <WatchVideo/> : <Navigate to={"/login"}/>} />
       <Route path='/my-profile' element={user? <MyProfile/> : <Navigate to={"/login"}/>} />
       <Route path='/liked-videos' element={user? <LikedVideos/> : <Navigate to={"/login"}/>} />
+      <Route path='/search-result' element={user? <SearchResult/> : <Navigate to={"/login"}/>} />
       </Route>
       <Route path='/register' element={ <Register/> } />
       <Route path='/login' element={ <Login/>} />

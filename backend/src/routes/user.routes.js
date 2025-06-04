@@ -10,7 +10,8 @@ import { loginUser,
   updateCoverImage,
   getWatchHistory,
   getUserChannelProfile ,
-  getCurrentUser} from "../controllers/user.controller.js";
+  getCurrentUser,
+  } from "../controllers/user.controller.js";
 import verifyJwt from "../middlewares/user.middleware.js";
 const userRouter = Router()
 
@@ -23,6 +24,7 @@ userRouter.route("/register").post(
   );
   
   
+  userRouter.route("/register").post(registerUser)
   userRouter.route("/login").post(loginUser)
   userRouter.route("/logout").post(verifyJwt,logOutUser)
   userRouter.route("/Refresh-Token").post(verifyJwt,refreshTokenForUser)

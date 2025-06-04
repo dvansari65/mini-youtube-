@@ -5,10 +5,11 @@ const subscriptionSchema = new Schema({
         type:mongoose.Schema.Types.ObjectId,
         ref:"User"
     },
-    subcriber:{
+    subscriber:{
         type:mongoose.Schema.Types.ObjectId,
          ref:"User"
-    }
+    },
+    
 },{timeseries:true})
 
 export const Subscription = mongoose.model("subscription",subscriptionSchema)

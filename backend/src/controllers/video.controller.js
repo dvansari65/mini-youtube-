@@ -5,6 +5,49 @@ import { User } from "../models/user.models.js";
 import ApiResponse from "../utils/ApiResponse.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
 import fs from "fs"
+
+
+const searchVideos = AsyncHandler( async(req,res)=>{
+      const query = req.query.q || ""
+      const page = parseInt(req.query.page) || 1;
+      const limit = parseInt(req.query.limit) || 10;
+      const skip = ( page - 1 )*limit
+      try {
+        const filter  = {
+          $or:[
+            {title: { $regex: query, $options: 'i' }},
+            {description: { $regex: query, $options: 'i' }}
+          ]
+        }
+        const countVideos = await Video.countDocuments(filter)
+        const videos = await Video.find(filter)
+        .sort({createdAt:-1})
+        .skip(skip)
+        .limit(limit)
+        .populate("owner")
+
+        if(videos.length == 0){
+          return res
+          .status(404)
+          .json(
+            new ApiResponse(404,videos,"videos not found")
+          )
+        }
+        return res
+        .status(200)
+        .json(
+          new ApiResponse(200,{videos:videos,countVideos:countVideos},"videos fetched successfully")
+        )
+
+      } catch (error) {
+        console.error("failed to fetched videos:",error)
+        new ApiError(404,"error while fetching the videos")
+      }
+
+      
+      
+})
+
 const uploadVideosContent = AsyncHandler ( async (req,res)=>{
     const {title,description,duration,isPublished}  = req.body
 
@@ -75,6 +118,7 @@ const uploadVideosContent = AsyncHandler ( async (req,res)=>{
          videoFile:uploadedVideo.url,
          isPublished:isPublished || false,
      })
+
     } catch (error) {
         throw new ApiError(500,"video not uploaded ")
     }
@@ -273,5 +317,6 @@ export {
     updateVideo,
     deleteVideo,
     getVideo,
-    getAllVideos
+    getAllVideos,
+    searchVideos
 } 

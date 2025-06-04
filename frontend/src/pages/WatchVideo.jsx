@@ -128,7 +128,7 @@ function WatchVideo() {
               <div>
                 <p className="font-medium text-gray-900 dark:text-white">{videoData.owner.userName}</p>
                 <p className="text-sm text-gray-600 dark:text-gray-400">
-                  {subscription?.data?.subscriberCount || 0} subscribers
+                  {subscription?.data?.subscribeCount || 0} subscribers
                 </p>
               </div>
             </div>
@@ -136,12 +136,12 @@ function WatchVideo() {
             <button
               onClick={() => toggleSubscription(videoData.owner._id)}
               className={`px-6 py-2 rounded-full font-medium transition-colors ${
-                subscription?.data?.subscribed
+                subscription?.data?.isSubscribed
                   ? 'bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white'
                   : 'bg-red-600 text-white hover:bg-red-700'
               }`}
             >
-              {subscription?.data?.subscribed ? "Subscribed" : "Subscribe"}
+              {subscription?.data?.isSubscribed ? "Subscribed" : "Subscribe"}
             </button>
           </div>
 

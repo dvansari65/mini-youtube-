@@ -7,10 +7,10 @@ import mongoose from "mongoose";
 import fs from "fs";
 import jwt from "jsonwebtoken"
 const registerUser = AsyncHandler(async (req, res) => {
-    console.log("BODY:", req.body);
-    console.log("FILES:", req.files);
+    // console.log("BODY:", req.body);
+    // console.log("FILES:", req.files);
     const { email, fullName, userName, password } = req.body;
-    console.log("email", email);
+    // console.log("email", email);
 
     if ([fullName, email, userName, password].some((field) => field?.trim() === "")) {
         throw new ApiError(400, "All fields are required");
@@ -37,13 +37,13 @@ const registerUser = AsyncHandler(async (req, res) => {
     }
 
     const avatarLocalFilePath = req.files.avatar[0].path;
-    console.log("avatarlocalFilepath", avatarLocalFilePath);
+    // console.log("avatarlocalFilepath", avatarLocalFilePath);
 
     if (!fs.existsSync(avatarLocalFilePath)) {
         throw new ApiError(400, "Avatar file is required");
     }
 
-    console.log("Uploading avatar from path:", avatarLocalFilePath);
+    // console.log("Uploading avatar from path:", avatarLocalFilePath);
 
     const avatar = await uploadOnCloudinary(avatarLocalFilePath);
     console.log("given avatar is", avatar);
@@ -114,7 +114,7 @@ const loginUser = AsyncHandler(async (req, res) => {
         secure: false,
         sameSite:"Lax"
     };
-    console.log("options", options);
+    // console.log("options", options);
     return res
         .status(200)
         .cookie("refreshToken", refreshToken, options)
@@ -162,7 +162,7 @@ const logOutUser = AsyncHandler(async (req, res) => {
 
 const refreshTokenForUser = AsyncHandler( async (req,res)=>{
        const InputUserRefreshToken =   req.cookies?.refreshToken || req.body.refreshToken
-       console.log("userRefreshToken:",InputUserRefreshToken)
+    //    console.log("userRefreshToken:",InputUserRefreshToken)
 
        if(!InputUserRefreshToken){
         throw new ApiError(401,"Inavalid refreshToken given by user")
@@ -191,7 +191,7 @@ const refreshTokenForUser = AsyncHandler( async (req,res)=>{
             secure: false,
             sameSite:"Lax"
         };
-        console.log("Cookies set:", res.getHeaders()["set-cookie"]);
+        // console.log("Cookies set:", res.getHeaders()["set-cookie"]);
         return res
         .status(200)
         .cookie("refreshToken",newRefreshToken,options)
@@ -244,8 +244,8 @@ const changeUserPassword = AsyncHandler( async (req, res)=>{
 
 const getCurrentUser = AsyncHandler(async (req,res)=>{
     const newUser = req.user
-    console.log("what is in 'req.user:'",req.user)
-    console.log("what is in req.user._id",req.user._id)
+    // console.log("what is in 'req.user:'",req.user)
+    // console.log("what is in req.user._id",req.user._id)
     if(!newUser){
         throw new ApiError(404,"User not found ")
     }
@@ -281,7 +281,7 @@ const updateAccountDetails = AsyncHandler( async (req,res)=>{
     if(!user){
         throw new ApiError(404,"user not found ")
     }
-    console.log("user in updateAccountDetails method > ",user)
+    // console.log("user in updateAccountDetails method > ",user)
     return res
     .status(200)
     .json(
@@ -363,7 +363,7 @@ const updateCoverImage = AsyncHandler ( async (req,res)=>{
 
 const getUserChannelProfile = AsyncHandler ( async (req,res)=>{
     const {userName} = req.params
-    console.log("req.params => ",req.params)
+    // console.log("req.params => ",req.params)
     if(!userName){
         throw new ApiError(404,"user not found")
     }
@@ -506,4 +506,6 @@ export { loginUser,
     updateAvatar ,
     updateCoverImage,
     getUserChannelProfile,
-    getWatchHistory};
+    getWatchHistory,
+    registerUser
+};

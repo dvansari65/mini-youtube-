@@ -22,10 +22,10 @@ const toggleVideoLike = AsyncHandler(async (req,res)=>{
             throw new ApiError(404,"video not found")
         }
         console.log("video:",video)
-        const hasLiked = video.likes.includes(user)
+        const hasLiked = video.likes.some(id=>id.toString() === user.toString())
         try {
             if(hasLiked){
-                 video.likes.pull(user)
+                 video.likes.filter((id)=>id.toString() !== user.toString())
                  await video.save();
                  return res.status(200).json(
                     new ApiResponse(200,{
@@ -35,7 +35,7 @@ const toggleVideoLike = AsyncHandler(async (req,res)=>{
                  )
             }
             if(!hasLiked){
-                video.likes.push(user)
+                video.likes.filter((id)=> id.toString() === user.toString())
                 await video.save();
                 return res.status(200).json(
                    new ApiResponse(200,{

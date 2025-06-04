@@ -4,6 +4,7 @@ import {
     updateVideo,
     deleteVideo,
     getVideo,
+    searchVideos,
     getAllVideos
 } from "../controllers/video.controller.js"
 import verifyJwt from "../middlewares/user.middleware.js"
@@ -23,5 +24,6 @@ videoRouter.route("/watch-video/:videoId").get(verifyJwt,watchVideo)
 videoRouter.route("/delete-video/:videoId").delete(verifyJwt,deleteVideo)
 videoRouter.route("/get-video/:videoId").get(verifyJwt,getVideo)
 videoRouter.route("/get-all-video").get(verifyJwt,getAllVideos)
+videoRouter.route("/search-videos").get(verifyJwt,searchVideos)
 
 export {videoRouter}

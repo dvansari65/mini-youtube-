@@ -45,7 +45,10 @@ function Home() {
           return;
         }
 
-        setVideos((prev) => [...prev, ...newVideos]);
+        setVideos((prev) => {
+          const existingIds = new Set(prev.map(v=>v._id))
+          const filteredIds = newVideos.filter(v => !existingIds.has(v._id))
+          return [...prev, ...filteredIds]});
         setHasMore(newVideos.length === LIMIT);
       } catch (error) {
         console.error('Failed to fetch videos from the database', error);
