@@ -162,7 +162,7 @@ const toggleTweetLike = AsyncHandler( async (req,res)=>{
                         new:true,
                     }
                 )
-                return res.status(200).json(200,{},"you like the video")
+                return res.status(200).json(new ApiResponse(200,{},"you liked the videos"))
             }
 
 
@@ -174,22 +174,56 @@ const toggleTweetLike = AsyncHandler( async (req,res)=>{
 })
 const getAllLikedVideos = AsyncHandler( async (req,res)=>{
         const user = req.user._id
+
         if(!user){
             throw new ApiError(400,"unauthorized request")
         }
-
-        const allVideos = await Video.find()
-        const length = allVideos.length
-        // console.log("all videos :",allVideos)
-        const AllLikedVideos = await Like.find()
-        if(AllLikedVideos.length === 0){
-            throw new ApiError(404,"there is no any liked videos")
+        try {
+            const videos = await Video.find()
+    
+            const videoId = videos.map(video=>video?._id.toString())
+    
+            const allVideos = await Like.find(
+                {
+                    likedBy:user,
+                    video:videoId
+                }
+            )
+            console.log("all videos:",allVideos)
+            return res
+            .status(200)
+            .json(
+                new ApiResponse(200,{allVideos},"all liked videos fetched successfully")
+            )
+        } catch (error) {
+            console.error("something went wrong while fetching the videos",error)
+            throw new ApiError(500,"something went wrong while fetching the videos")
         }
-        const numberOfLikedVideos  = AllLikedVideos?.length || 0
-        return res
-        .status(200)
-        .json(
-            new ApiResponse(200,{length,allVideos,numberOfLikedVideos,AllLikedVideos},"your liked videos" )
-        )
+
+        
 })
-export {toggleVideoLike,toggleCommentLike,toggleTweetLike,getAllLikedVideos} 
+
+const totalUserVideoslikes = AsyncHandler( async(req,res)=>{
+        const user = req.user?._id
+        if(!user){
+            throw new ApiError(402,"unAuthorized request")
+        }
+       try {
+         const videos = await Video.find()
+         const videoIds = videos.map(video=>video?._id)
+        
+        //  console.log("video ids:",videoIds)
+         const videoLikesCount = await Like.countDocuments({video:videoIds})
+         const allLikesVideos = await Like.find({video:videoIds})
+         return res
+         .status(200)
+         .json(
+            new ApiResponse(200,{videoLikesCount,allLikesVideos},"videos fetched successfully")
+         )
+        
+       } catch (error) {
+        console.error("something went wrong",error)
+        throw new ApiError(500,"something went wrong")
+       }
+})
+export {toggleVideoLike,toggleCommentLike,toggleTweetLike,getAllLikedVideos,totalUserVideoslikes} 
