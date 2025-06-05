@@ -18,9 +18,19 @@ function MyProfile() {
             return;
         }
         try {
-            const res = await axiosInstance.get("/users/get-current-user");
-            const data = res.data.data;
-            setUser(data);
+           const [currentUser,totlLikesOfVideos,allVideos] = await Promise.all([
+            axiosInstance.get('/users/get-current-user'),
+            axiosInstance.get('/likes/total-likes-off-user-channel-videos'),
+            axiosInstance.get('/videos/get-all-video')
+           ])
+           const combinedData = {
+            currentUser:currentUser.data.data,
+            totlLikesOfVideos:totlLikesOfVideos.data.data,
+            allVideos:allVideos.data.data
+           }
+           setUser(combinedData)
+           console.log("combinedData",combinedData)
+            
         } catch (error) {
             console.error("something went wrong while fetching user data", error);
         } finally {
@@ -64,9 +74,9 @@ function MyProfile() {
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden mb-8">
                     <div className="relative h-48 bg-gradient-to-r from-blue-500 to-blue-600">
-                        {User?.newUser?.coverImage ? (
+                        {User?.currentUser.newUser?.coverImage ? (
                             <img 
-                                src={User.newUser.coverImage} 
+                                src={User.currentUser.newUser.coverImage} 
                                 alt="cover" 
                                 className="w-full h-full object-cover"
                             />
@@ -83,9 +93,9 @@ function MyProfile() {
                         <div className="flex items-center -mt-16">
                             <div className="relative">
                                 <div className="h-32 w-32 rounded-full border-4 border-white dark:border-gray-800 bg-white dark:bg-gray-800 overflow-hidden">
-                                    {User?.newUser?.avatarImage ? (
+                                    {User?.currentUser.newUser?.avatarImage ? (
                                         <img
-                                            src={User.newUser.avatarImage}
+                                            src={User.currentUser.newUser.avatarImage}
                                             alt="Avatar"
                                             className="h-full w-full object-cover"
                                         />
@@ -102,10 +112,10 @@ function MyProfile() {
                             </div>
                             <div className="ml-6 mt-16">
                                 <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-                                    {User?.newUser?.userName}
+                                    {User?.currentUser.newUser?.userName}
                                 </h1>
                                 <p className="text-gray-500 dark:text-gray-400">
-                                    @{User?.newUser?.userName?.toLowerCase()}
+                                    @{User?.currentUser.newUser?.userName?.toLowerCase()}
                                 </p>
                             </div>
                         </div>
@@ -124,7 +134,7 @@ function MyProfile() {
                                     Subscribers
                                 </p>
                                 <p className="text-2xl font-semibold text-gray-900 dark:text-white">
-                                    {User?.newUser?.subscribers?.length || 0}
+                                    {User?.currentUser.newUser?.subscriberCount}
                                 </p>
                             </div>
                         </div>
@@ -140,7 +150,7 @@ function MyProfile() {
                                     Total Likes
                                 </p>
                                 <p className="text-2xl font-semibold text-gray-900 dark:text-white">
-                                    {User?.newUser?.totalLikes || 0}
+                                    {User.totlLikesOfVideos.videoLikesCount || 0}
                                 </p>
                             </div>
                         </div>
@@ -156,7 +166,7 @@ function MyProfile() {
                                     Total Videos
                                 </p>
                                 <p className="text-2xl font-semibold text-gray-900 dark:text-white">
-                                    {User?.newUser?.videos?.length || 0}
+                                    {User.allVideos.length || 0}
                                 </p>
                             </div>
                         </div>
