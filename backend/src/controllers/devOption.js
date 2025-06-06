@@ -1,5 +1,7 @@
 import { Like } from "../models/likes.models.js";
+import { Subscription } from "../models/subscription.models.js";
 import { Video } from "../models/video.models.js";
+import { User } from "../models/user.models.js";
 import ApiError from "../utils/ApiError.js";
 import ApiResponse from "../utils/ApiResponse.js";
 import AsyncHandler from "../utils/AsyncHandler.js";
@@ -20,5 +22,22 @@ const resetVideoLikes = AsyncHandler(async (req ,res) => {
       throw new ApiError(500, "Failed to reset video likes");
     }
   });
+  const resetSubscription = AsyncHandler( async (req,res)=>{
+    const {userId} = req.params
+    try {
+      await Subscription.deleteMany({subscriber:userId})
+
+      await User.updateMany({},{$set:{subscriberCount:0}})
+      const user = await User.find({_id:userId})
+      return res
+      .status(200)
+      .json(
+        new ApiResponse(200,{user},"subscriber reseted")
+      )
+    } catch (error) {
+      console.error("error while reseting the subscription",error)
+      throw new ApiError("error while reseting the subscription")
+    }
+  })
   
-  export default resetVideoLikes
+  export  {resetVideoLikes,resetSubscription}

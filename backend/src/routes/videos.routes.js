@@ -5,7 +5,8 @@ import {
     deleteVideo,
     getVideo,
     searchVideos,
-    getAllVideos
+    getAllVideos,
+    MyVideos
 } from "../controllers/video.controller.js"
 import verifyJwt from "../middlewares/user.middleware.js"
 import { upload } from "../middlewares/multer.middleware.js"
@@ -25,5 +26,6 @@ videoRouter.route("/delete-video/:videoId").delete(verifyJwt,deleteVideo)
 videoRouter.route("/get-video/:videoId").get(verifyJwt,getVideo)
 videoRouter.route("/get-all-video").get(verifyJwt,getAllVideos)
 videoRouter.route("/search-videos").get(verifyJwt,searchVideos)
+videoRouter.route("/my-videos").get(verifyJwt,MyVideos)
 
 export {videoRouter}

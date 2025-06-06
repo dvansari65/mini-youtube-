@@ -188,7 +188,7 @@ const getAllLikedVideos = AsyncHandler( async (req,res)=>{
                     likedBy:user,
                     video:videoId
                 }
-            )
+            ).sort({createdAt:-1})
             console.log("all videos:",allVideos)
             return res
             .status(200)

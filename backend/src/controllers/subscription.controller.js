@@ -65,19 +65,19 @@ const toggleSubscription = AsyncHandler(async (req, res) => {
 
 const getChannelSubcribers = AsyncHandler( async (req,res)=>{
     
-    const user = req.user
+   const {channelId} = req.params
     
-    if(!user){
+    if(!channelId){
         throw new ApiError(404,"user not found ")
     }
-    console.log("user:",user)
-    const subcribersOfChannel = await Subscription.find({channel:user})
+    console.log("user:",channelId)
+    const subcribersOfChannel = await Subscription.find({channel:channelId})
    
     
     if(!subcribersOfChannel){
         throw new ApiError(404,"there is no any subscriber of this channel ")
     }
-    const subscriberCount = await Subscription.countDocuments({channel:user})
+    const subscriberCount = await Subscription.countDocuments({channel:channelId})
     if(subscriberCount== undefined){
         throw new ApiError(404," subscriber Count can not be count")
     }
@@ -108,24 +108,43 @@ const getSubcribedChannel = AsyncHandler( async (req,res)=>{
         new ApiResponse(200,{countSubscribedToChannel,subscribedTo:subscribedChannel},"here is your subscribed channel")
     )
 })
-const isSubscribed = AsyncHandler( async(req,res)=>{
-    const user = req.user?._id
-    const {channelId} = req.query
-    console.log("channel id:",channelId)
-    console.log("user:",user)
-    if( !channelId){
-        throw new ApiError(404," channelId is missing")
+
+const subscribeStatus = AsyncHandler( async(req,res)=>{
+    const {channelId} = req.params
+    const user = req.user._id
+    try {
+        if(!user ||channelId){
+            new ApiError(404,"please provide channel id or user id")
+        }
+        const isSubscribed = await Subscription.findOne({
+            channel:channelId,
+            subscriber:user
+        })
+
+        if(isSubscribed){
+            return res
+            .status(200)
+            .json(
+                new ApiResponse(200,{subscribed:true},"user already subscribed it")
+            )
+        }
+        if(!isSubscribed){
+            return res
+            .status(200)
+            .json(
+                new ApiResponse(200,{subscribed:false},"user not  subscribed it")
+            )
+        }
+        if(channelId == user){
+            return res
+            .status(200)
+            .json(
+                new ApiResponse(200,{subscribed:!!isSubscribed},"user toggle subscribe")
+            )
+        }
+    } catch (error) {
+        console.error("error while checking the status",error)
+        throw new ApiError(500,"error while checking the statu")
     }
-    if(!user){
-        throw new ApiError(404,"user is missing ")
-    }
-    const existingSubscription = await Subscription.findOne({subcriber:user,channel:channelId})
-    if(channelId == user){
-        new ApiResponse(200,{subscribed:!!existingSubscription},"subscription status")
-    }
-    return res.status(200).json(
-        new ApiResponse(200,{subscribed:!!existingSubscription},"subscription status")
-    )
-    
 })
-export {toggleSubscription,getChannelSubcribers,getSubcribedChannel,isSubscribed}
+export {toggleSubscription,getChannelSubcribers,getSubcribedChannel,subscribeStatus}

@@ -29,7 +29,7 @@ function MyProfile() {
             allVideos:allVideos.data.data
            }
            setUser(combinedData)
-           console.log("combinedData",combinedData)
+        //    console.log("combinedData",combinedData)
             
         } catch (error) {
             console.error("something went wrong while fetching user data", error);

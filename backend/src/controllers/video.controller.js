@@ -141,7 +141,7 @@ const watchVideo = AsyncHandler(async (req,res)=>{
 
     console.log("req.params:",req.params)
     if(!videoId){
-        throw new ApiError(401,"something is wrong with video")
+        throw new ApiError(401,"please provide video id")
     }
 
     const video =  await Video.findById(videoId).populate("owner","userName")
@@ -310,6 +310,24 @@ const getAllVideos = AsyncHandler ( async (req,res)=>{
     )
 })
 
+const MyVideos = AsyncHandler( async(req,res)=>{
+    const user = req.user?._id
+    if(!user){
+      console.error("unauthorized req",error)
+      throw new ApiError(400,"unauthorized request")
+    }
+    try {
+      const myVideos = await Video.find({owner:user}).sort({createdAt:-1})
+      return res
+      .status(200)
+      .json(
+        new ApiResponse(200,myVideos,"your videos successfully fetched")
+      )
+    } catch (error) {
+      console.error("videos not found",error)
+    }
+})
+
 
 export {
     uploadVideosContent,
@@ -318,5 +336,6 @@ export {
     deleteVideo,
     getVideo,
     getAllVideos,
-    searchVideos
+    searchVideos,
+    MyVideos
 } 
