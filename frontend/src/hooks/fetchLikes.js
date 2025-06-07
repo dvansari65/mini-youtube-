@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react'
 import axiosInstance from '../services/api'
-
-function fetchLikes(videoId) {
+import { useState } from 'react'
+function useFetchLikes(videoId) {
   const [likesCount,setLikesCount] = useState(null)
   const [isLike,setIsLike] = useState(false)
   const fetchLikesCount = async()=>{
@@ -35,4 +35,4 @@ function fetchLikes(videoId) {
   return {likesCount,isLike}
 }
 
-export default fetchLikes
+export default useFetchLikes
