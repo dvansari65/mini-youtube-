@@ -59,7 +59,7 @@ const uploadVideosContent = AsyncHandler ( async (req,res)=>{
     if(!thumbnailLocalPath){
         throw new ApiError(401,"please provide thumbnail local path")
     }
-    const uploadedThumbnail = await uploadOnCloudinary(thumbnailLocalPath)
+    const uploadedThumbnail = await uploadOnCloudinary(thumbnailLocalPath,"image")
     try {
         if(!uploadedThumbnail || !uploadedThumbnail.url){
           if(fs.existsSync(thumbnailLocalPath)){
@@ -77,7 +77,7 @@ const uploadVideosContent = AsyncHandler ( async (req,res)=>{
         throw new ApiError(401,"please provide video local path")
     }
    
-    const uploadedVideo = await uploadOnCloudinary(videoLocalPath)
+    const uploadedVideo = await uploadOnCloudinary(videoLocalPath,"video")
     console.log("Uploaded video details:", uploadedVideo);
 
     try {

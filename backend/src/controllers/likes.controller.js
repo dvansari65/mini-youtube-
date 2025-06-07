@@ -5,77 +5,74 @@ import ApiResponse from "../utils/ApiResponse.js";
 import {Comment} from "../models/comment.models.js"
 import { Video } from "../models/video.models.js";
 import { Tweet } from "../models/tweet.models.js";
-const toggleVideoLike = AsyncHandler(async (req,res)=>{
-        const {videoId} = req.params;
-        console.log("videoId",videoId)
-        const user = req.user?._id
-        console.log("req.params:",req.params)
-        if(!videoId){
-            throw new ApiError(404,"video not found")
+const toggleVideoLike = AsyncHandler(async (req, res) => {
+    const { videoId } = req.params;
+    const user = req.user?._id;
+  
+    if (!videoId) throw new ApiError(404, "video not found");
+    if (!user) throw new ApiError(401, "unauthorized request");
+  
+    const video = await Video.findById(videoId);
+    if (!video) throw new ApiError(404, "video not found");
+  
+    try {
+      const isLiked = await Like.findOne({ video: videoId, likedBy: user });
+      let updatedVideo;
+      let likesCount;
+  
+      if (isLiked) {
+        // Unlike the video
+        await Like.deleteOne({ video: videoId, likedBy: user });
+  
+        updatedVideo = await Video.findByIdAndUpdate(
+          videoId,
+          { $inc: { likesCount: -1 },
+            $pull:{likes:user}
+        },
+          { new: true }
+        );
+  
+        // Ensure non-negative count
+        if (updatedVideo.likesCount < 0) {
+          updatedVideo = await Video.findByIdAndUpdate(
+            videoId,
+            { $set: { likesCount: 0 },
+               $unset:{likes:''}
+            },
+            { new: true }
+          );
         }
+  
+        likesCount = updatedVideo.likesCount;
+  
+        return res.status(200).json(
+          new ApiResponse(200, { isLiked: false, likesCount }, "video unliked")
+        );
+      } else {
+        // Like the video
+        await Like.create({ video: videoId, likedBy: user });
+  
+        updatedVideo = await Video.findByIdAndUpdate(
+          videoId,
+          { $inc: { likesCount: 1 } ,
+            $push:{likes:user}
+        },
+          { new: true }
+        );
+  
+        likesCount = updatedVideo.likesCount;
+  
+        return res.status(200).json(
+          new ApiResponse(200, { isLiked: true, likesCount }, "video liked")
+        );
+      }
+    } catch (error) {
+      console.error("Error toggling like:", error);
+      throw new ApiError(500, "Something went wrong while toggling the video like");
+    }
+  });
+       
 
-        if(!user){
-            throw new ApiError(404,"unauthorized request")
-        }
-        const video = await Video.findById(videoId)
-        if(!video ){
-            throw new ApiError(404,"video not found")
-        }
-        console.log("video:",video)
-
-       try {
-         const isLiked  = await Like.findOne(
-             {
-                 video:videoId,
-                 likedBy:user
-             }
-         )
-         
-         console.log("isliked",isLiked)
-         let likesCount;
-         if(isLiked){
-             await Like.deleteMany(
-                 {
-                     video:videoId,
-                     likedBy:user
-                 }
-             )
-             const updatedLikedVideo = await Video.findByIdAndUpdate(
-                 videoId,
-                 {$inc:{likesCount:-1}},
-                 {new : true}
-             )
-             likesCount = updatedLikedVideo.likesCount
-             return res
-             .status(200)
-             .json(
-                 new ApiResponse(200,{isLiked:false,likesCount},"video unliked")
-             )
-         }else{
-             await Like.create(
-                 {
-                     video:videoId,
-                     likedBy:user
-                 }
-             )
-             const updatedLikedVideo = await Video.findByIdAndUpdate(
-                 videoId,
-                 {$inc:{likesCount:1}},
-                 {new : true}
-             )
-             likesCount = updatedLikedVideo.likesCount
-             return res
-             .status(200)
-             .json(
-                 new ApiResponse(200,{isLiked:true,likesCount},"video liked")
-             )
-         }
-       } catch (error) {
-            console.error("something went wrong while toggling the video like",error)
-            throw new ApiError(500,"something went wrong while toggling the video like")
-       }
-         
-})
 
 const toggleCommentLike = AsyncHandler( async()=>{
         const {commentId} = req.params

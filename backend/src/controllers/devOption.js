@@ -12,7 +12,16 @@ const resetVideoLikes = AsyncHandler(async (req ,res) => {
       await Like.deleteMany({ video: { $exists: true } });
   
       // Step 2: Reset likesCount in all videos
-      await Video.updateMany({}, { $set: { likesCount: 0 } });
+      await Video.updateMany(
+        {},
+        {
+          $set: {
+            likesCount: 0,
+            likes: []
+          }
+        }
+      );
+      
   
       return res.status(200).json(
         new ApiResponse(200, null, "All video likes reset successfully.")
@@ -39,5 +48,6 @@ const resetVideoLikes = AsyncHandler(async (req ,res) => {
       throw new ApiError("error while reseting the subscription")
     }
   })
+
   
   export  {resetVideoLikes,resetSubscription}

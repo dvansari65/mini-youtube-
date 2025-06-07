@@ -32,7 +32,7 @@ function useFetchLikes(videoId) {
     if(!videoId) return;
     fetchLikesCount()
   },[videoId])
-  return {likesCount,isLike}
+  return {likesCount,isLike,toggleLike}
 }
 
 export default useFetchLikes

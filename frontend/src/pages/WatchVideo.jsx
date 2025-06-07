@@ -1,220 +1,152 @@
-import React, { useEffect, useState, useCallback } from 'react';
-import { useParams } from 'react-router-dom';
-import axiosInstance from '../services/api';
-import { ThumbsUpIcon, Share2, Flag, Bell } from 'lucide-react';
-import VideoComments from './VideoComent';
+import React, { useEffect, useState } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import useFetchVideo from '../hooks/fetchVideo';
+import useFetchLikes from '../hooks/fetchLikes';
 import useChannelStatus from '../hooks/subscribeStatus';
+import useComment from '../hooks/fetchComment';
+import { ThumbsUp, Send } from 'lucide-react';
+import axiosInstance from '../services/api';
+import { useUser } from '../context/authcontext';
 
 function WatchVideo() {
+  const navigate = useNavigate();
+  const { user } = useUser();
   const { videoId } = useParams();
 
-  // Video data state
-  const [videoData, setVideoData] = useState(null);
-  // Likes count state
-  const [likesCount, setLikesCount] = useState(0);
-  // Loading & error states for video fetch
-  const [loadingVideo, setLoadingVideo] = useState(true);
-  const [videoError, setVideoError] = useState('');
+  const [currentUser, setCurrentUser] = useState(null);
+  const [commentInput, setCommentInput] = useState('');
 
-  // Fetch video info from backend
-  const fetchVideo = useCallback(async () => {
-    setLoadingVideo(true);
-    setVideoError('');
+  // Fetch Video
+  const { videoData, loading: videoLoading } = useFetchVideo(videoId);
+
+  // Likes
+  const { likesCount, isLike, toggleLike } = useFetchLikes(videoId);
+
+  // Comments
+  const { comments, commentsCount, postComment } = useComment(videoId);
+
+  // Subscription
+  const {
+    isSubscribed,
+    numberOfSubscriber,
+    toggleSubscribe,
+    loading: subLoading,
+  } = useChannelStatus(videoData?.owner?._id);
+
+  // Get current user
+  const fetchCurrentUser = async () => {
+    if (!user) return navigate('/login');
     try {
-      const res = await axiosInstance.get(`/videos/get-video/${videoId}`);
-      const data = res?.data?.data;
-      if (!data) throw new Error('No video data found');
-      setVideoData(data);
-      setLikesCount(data.likesCount || 0);
-    } catch (err) {
-      setVideoError('Video not found or error fetching video.');
-      console.error(err);
-    } finally {
-      setLoadingVideo(false);
-    }
-  }, [videoId]);
-
-  useEffect(() => {
-    fetchVideo();
-  }, [fetchVideo]);
-
-  // Get channel ID safely (only when videoData is loaded)
-  const channelId = videoData?.owner?._id;
-
-// Prevent hook from being called with undefined
-const shouldInitSubscription = Boolean(channelId);
-const {
-  isSubscribed,
-  numberOfSubscriber,
-  error: subscribeError,
-  loading: subscribeLoading,
-  toggleSubscribe,
-} = useChannelStatus(shouldInitSubscription ? channelId : null);
-
-  // Handle subscription toggle with proper error handling
-  const handleSubscribe = async () => {
-    if (!channelId) {
-      console.error('Channel ID is missing');
-      return;
-    }
-    try {
-      await toggleSubscribe();
+      const res = await axiosInstance.get('/users/get-current-user');
+      setCurrentUser(res.data.data.newUser);
     } catch (error) {
-      console.error('Error toggling subscription:', error);
+      console.error('Failed to fetch current user', error);
     }
   };
 
-  // Like toggle handler
-  const toggleLike = async () => {
-    if (!videoId) return;
-    try {
-      const res = await axiosInstance.post(`/likes/toggle-video-like/${videoId}`);
-      const { isLiked, likesCount: updatedLikesCount } = res?.data?.data || {};
-      setVideoData(prev => ({
-        ...prev,
-        liked: isLiked,
-      }));
-      setLikesCount(updatedLikesCount ?? likesCount);
-    } catch (error) {
-      console.error('Error toggling like:', error);
-    }
-  };
   useEffect(() => {
-    console.log("videoData:", videoData);
-    console.log("channelId:", channelId);
-  }, [videoData]);
-  
+    fetchCurrentUser();
+  }, [user]);
 
-  // Loading state for the entire page
-  if (loadingVideo || subscribeLoading) {
-    return (
-      <div className="flex justify-center items-center h-full">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
-      </div>
-    );
-  }
+  const handlePostComment = async (e) => {
+    e.preventDefault();
+    if (!commentInput.trim()) return;
 
-  // Video not found or error
-  if (videoError || !videoData) {
-    return (
-      <div className="flex justify-center items-center h-full">
-        <p className="text-red-500 text-xl">{videoError || 'Video not found.'}</p>
-      </div>
-    );
-  }
+    await postComment(commentInput);
+    setCommentInput('');
+  };
+
+  if (videoLoading || subLoading) return <div className="p-8">Loading...</div>;
+  if (!videoData) return <div className="p-8 text-red-500">Video not found.</div>;
 
   return (
-    <div className="h-full w-full bg-gray-100 dark:bg-gray-900">
-      <div className="max-w-5xl mx-auto px-4">
-        {subscribeError && (
-          <div className="mb-4 px-4 py-2 bg-red-100 text-red-700 rounded-md">
-            ⚠️ {subscribeError}
-          </div>
-        )}
+    <div className="max-w-5xl mx-auto p-4 space-y-6">
+      {/* Video Player */}
+      <div className="aspect-video bg-black rounded-xl overflow-hidden shadow-lg">
+        <video
+          src={videoData.videoFile}
+          controls
+          autoPlay
+          className="w-full h-full"
+        />
+      </div>
 
-        {/* Video Player Section */}
-        <div className="mb-4">
-          <div className="aspect-video w-full bg-black overflow-hidden rounded-xl shadow-lg">
-            <video
-              controls
-              poster={videoData.thumbNail}
-              className="w-full h-full object-contain"
+      {/* Video Details */}
+      <div className="space-y-2">
+        <h1 className="text-2xl font-bold">{videoData.title}</h1>
+        <p className="text-gray-600">{videoData.description}</p>
+
+        <div className="flex items-center justify-between mt-3">
+          <div className="flex items-center gap-4">
+            <img
+              src={videoData.avatar}
+              alt="channel avatar"
+              className="w-10 h-10 rounded-full"
+            />
+            <div>
+              <p className="font-semibold">{videoData.owner?.userName}</p>
+              <p className="text-sm text-gray-500">{numberOfSubscriber} Subscribers</p>
+            </div>
+            <button
+              onClick={toggleSubscribe}
+              className={`ml-4 px-4 py-1 rounded-full font-semibold ${
+                isSubscribed ? 'bg-gray-200 text-black' : 'bg-red-500 text-white'
+              }`}
             >
-              <source src={videoData.videoFile} type="video/mp4" />
-              Your browser does not support the video tag.
-            </video>
+              {isSubscribed ? 'Subscribed' : 'Subscribe'}
+            </button>
           </div>
+
+          <button
+            onClick={toggleLike}
+            className={`flex items-center gap-2 px-4 py-2 rounded-full font-semibold ${
+              isLike ? 'bg-blue-600 text-white' : 'bg-gray-200 text-black'
+            }`}
+          >
+            <ThumbsUp size={18} />
+            {likesCount}
+          </button>
         </div>
+      </div>
 
-        {/* Video Info Section */}
+      {/* Comments Section */}
+      <div className="border-t pt-4">
+        <h2 className="text-xl font-semibold mb-3">{commentsCount} Comments</h2>
+
+        <form onSubmit={handlePostComment} className="flex items-center gap-3 mb-4">
+          <input
+            type="text"
+            placeholder="Add a comment..."
+            value={commentInput}
+            onChange={(e) => setCommentInput(e.target.value)}
+            className="flex-grow border border-gray-300 rounded px-3 py-2 outline-none"
+          />
+          <button
+            type="submit"
+            className="bg-blue-600 text-white px-3 py-2 rounded hover:bg-blue-700"
+          >
+            <Send size={16} />
+          </button>
+        </form>
+
         <div className="space-y-4">
-          {/* Title */}
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{videoData.title}</h1>
-
-          {/* Stats and Actions Bar */}
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-4 border-b border-gray-200 dark:border-gray-700">
-            <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
-              <div className="flex items-center gap-1">
-                <span className="font-medium">{videoData.views?.length || 0}</span>
-                <span>views</span>
+          {comments?.length > 0 ? (
+            comments.map((comment) => (
+              <div key={comment._id} className="flex gap-3 items-start">
+                <img
+                  src={comment?.owner?.avatar || currentUser?.avatar}
+                  alt="avatar"
+                  className="w-8 h-8 rounded-full"
+                />
+                <div>
+                  <p className="font-semibold">{comment?.owner?.userName || currentUser?.userName}</p>
+                  <p className="text-sm text-gray-700">{comment.content}</p>
+                </div>
               </div>
-              <div className="flex items-center gap-1">
-                <span>{new Date(videoData.createdAt).toLocaleDateString()}</span>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <button
-                onClick={toggleLike}
-                className={`flex items-center gap-2 px-4 py-2 rounded-full transition-colors ${
-                  videoData.liked
-                    ? 'bg-gray-200 dark:bg-gray-700 text-red-500 dark:text-white'
-                    : 'hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300'
-                }`}
-              >
-                <ThumbsUpIcon size={20} />
-                <span>{likesCount}</span>
-              </button>
-              <button className="flex items-center gap-2 px-4 py-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300">
-                <Share2 size={20} />
-                <span>Share</span>
-              </button>
-              <button className="flex items-center gap-2 px-4 py-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300">
-                <Flag size={20} />
-                <span>Report</span>
-              </button>
-            </div>
-          </div>
-
-          {/* Channel Info */}
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 py-4 border-b border-gray-200 dark:border-gray-700">
-            <div className="flex items-center gap-3">
-              <img
-                src={videoData.avatar}
-                alt="avatar"
-                className="w-12 h-12 rounded-full object-cover border-2 border-gray-200 dark:border-gray-700"
-              />
-              <div>
-                <p className="font-medium text-gray-900 dark:text-white">{videoData.owner.userName}</p>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  {numberOfSubscriber} subscribers
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <button
-                onClick={()=>handleSubscribe()}
-                className={`flex items-center gap-2 px-6 py-2 rounded-full font-medium transition-colors ${
-                   isSubscribed
-                    ? 'bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white'
-                    : 'bg-red-600 text-white hover:bg-red-700'
-                }`}
-              >
-                {isSubscribed ? (
-                  <>
-                    <Bell size={18} />
-                    <span>Subscribed</span>
-                  </>
-                ) : (
-                  <span>Subscribe</span>
-                )}
-              </button>
-            </div>
-          </div>
-
-          {/* Description */}
-          <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-4 shadow-sm">
-            <div className="flex items-center gap-2 mb-2">
-              <span className="text-sm text-gray-600 dark:text-gray-400">
-                {(videoData.views?.length || 0)} views • {new Date(videoData.createdAt).toLocaleDateString()}
-              </span>
-            </div>
-            <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap text-sm">{videoData.description}</p>
-          </div>
-
-          {/* Comments Section */}
-          <VideoComments videoId={videoId} token={localStorage.getItem('token')} />
+            ))
+          ) : (
+            <p className="text-gray-500">No comments yet. Be the first!</p>
+          )}
         </div>
       </div>
     </div>
