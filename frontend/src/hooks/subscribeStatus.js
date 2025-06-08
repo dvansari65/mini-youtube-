@@ -6,7 +6,7 @@ function useChannelStatus(channelId) {
   const [numberOfSubscriber, setNumberOfSubscriber] = useState(0);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
-
+  const [subscribedTo,setSubscribedTo] = useState([])
   const fetchIsSubscribeStatus = async () => {
     try {
         if(!channelId) return
@@ -33,12 +33,26 @@ function useChannelStatus(channelId) {
     }
   };
 
+  const fetchSubscribedChannel = async ()=>{
+    try {
+      const res = await axiosInstance.get('/subscription/get-subscribed-channel')
+      if(!res  ){
+        console.error("response not obtain from backend")
+        setLoading(false)
+      }
+      setSubscribedTo(res.data.data?.subscribedTo || [])
+    } catch (error) {
+      console.error("data can not be fetched",error)
+      setLoading(false)
+    }
+  }
+
   const toggleSubscribe = async () => {
     try {
         if(!channelId) return
       const res = await axiosInstance.post(`/subscription/toggle-subscription?channelId=${channelId}`);
       setIsSubscribed(res.data.data.isSubscribed);
-      setNumberOfSubscriber(res.data.data.subscribeCount);
+      setNumberOfSubscriber(res.data?.data?.subscribeCount || []);
       setError('');
     } catch (error) {
       console.error('Error toggling subscription:', error);
@@ -48,7 +62,7 @@ function useChannelStatus(channelId) {
   
   useEffect(() => {
     if (!channelId) {
-      setLoading(false); // Add this so it doesn't get stuck in loading
+      setLoading(false); 
       return;
     }
   
@@ -62,6 +76,7 @@ function useChannelStatus(channelId) {
     };
   
     fetchAll();
+    
   }, [channelId]);
   
 
@@ -71,6 +86,10 @@ function useChannelStatus(channelId) {
     error,
     loading,
     toggleSubscribe,
+    fetchSubscriberCount,
+    fetchIsSubscribeStatus,
+    fetchSubscribedChannel,
+    subscribedTo
   };
 }
 

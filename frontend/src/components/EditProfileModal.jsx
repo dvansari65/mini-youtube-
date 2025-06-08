@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Upload, Image as ImageIcon } from 'lucide-react';
+import { X, Image as ImageIcon } from 'lucide-react';
 
 const EditProfileModal = ({ isOpen, onClose, onSave }) => {
     const [coverImage, setCoverImage] = useState(null);

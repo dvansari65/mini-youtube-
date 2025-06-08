@@ -2,8 +2,11 @@ import React, { useEffect } from 'react'
 import axiosInstance from '../services/api'
 import { useState } from 'react'
 function useFetchLikes(videoId) {
-  const [likesCount,setLikesCount] = useState(null)
+  const [videoLikesCount,setLikesCount] = useState(null)
+  
   const [isLike,setIsLike] = useState(false)
+
+  
   const fetchLikesCount = async()=>{
     try {
         const res = await axiosInstance.post(`/likes/toggle-video-like/${videoId}`)
@@ -32,7 +35,7 @@ function useFetchLikes(videoId) {
     if(!videoId) return;
     fetchLikesCount()
   },[videoId])
-  return {likesCount,isLike,toggleLike}
+  return {videoLikesCount,isLike,toggleLike}
 }
 
 export default useFetchLikes

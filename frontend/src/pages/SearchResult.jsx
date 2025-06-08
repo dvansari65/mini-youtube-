@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import axiosInstance from '../services/api';
 import { MessageCircleIcon, HeartIcon, UserCircleIcon } from 'lucide-react';
+import useDebounce from '../hooks/useDBounce';
 
 function SearchResult() {
   const [searchParams] = useSearchParams();
@@ -16,6 +17,7 @@ function SearchResult() {
   const LIMIT = 10;
   const observer = useRef();
 
+  const {debouncedQuery}   = useDebounce(query,500)
   const navigateToWatchVideo = (videoId) => {
     if (loading) return;
     navigate(`/watch-video/${videoId}`);
@@ -25,10 +27,11 @@ function SearchResult() {
     setVideos([]);
     setPage(1);
     setHasMore(true);
-  }, [query]);
+  }, [debouncedQuery]);
   
 
   const lastVideoRef = useCallback(
+    
     (node) => {
       if (loading) return;
       if (observer.current) observer.current.disconnect();
@@ -44,6 +47,12 @@ function SearchResult() {
     [loading, hasMore]
   );
   useEffect(() => {
+    const controller = new AbortController()
+
+    if(!debouncedQuery) return;
+    setLoading(true)
+    setError('')
+  
     const fetchSearchResults = async () => {
       if (!query) return;
       console.log("query",query)
@@ -77,7 +86,8 @@ function SearchResult() {
     };
 
     fetchSearchResults();
-  }, [query, page]);
+    return ()=>controller.abort()
+  }, [debouncedQuery, page]);
 
   if (error) {
     return (
