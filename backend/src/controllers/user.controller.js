@@ -97,6 +97,7 @@ const loginUser = AsyncHandler(async (req, res) => {
 
     if (!user) {
         throw new ApiError(404, "User does not exist");
+    
     }
 
     const isPasswordValid = await user.isPasswordCorrect(password);
@@ -263,38 +264,40 @@ const getCurrentUser = AsyncHandler(async (req,res)=>{
 
 
 
-const updateAccountDetails = AsyncHandler( async (req,res)=>{
-    const {fullName,userName,email} = req.body
-    const user =  await User.findByIdAndUpdate(
-        req.user?._id,
+const updateAccountDetails = AsyncHandler(async (req, res) => {
+    const { fullName, userName, email } = req.body;
+
+    // Check if another user already has this userName or email
+    const existingUser = await User.findOne({
+        _id: { $ne: req.user._id },
+        $or: [{ userName }, { email }]
+    });
+
+    if (existingUser) {
+        throw new ApiError(400, "Username or email already in use. Please use a different one.");
+    }
+
+    const user = await User.findByIdAndUpdate(
+        req.user._id,
         {
             $set: {
                 email,
                 fullName,
                 userName,
-            }
-        },
-        {
-            new:true,
-        }
-    )
-    if(!user){
-        throw new ApiError(404,"user not found ")
-    }
-    // console.log("user in updateAccountDetails method > ",user)
-    return res
-    .status(200)
-    .json(
-        new ApiResponse(
-            200,
-            {
-                user
             },
-            "information updated succesfully"
-        )
-    )
+        },
+        { new: true }
+    );
 
-})
+    if (!user) {
+        throw new ApiError(404, "User not found");
+    }
+
+    return res.status(200).json(
+        new ApiResponse(200, { user }, "Information updated successfully")
+    );
+});
+
 const updateAvatar = AsyncHandler ( async (req,res)=>{
     const avatarLocalFilePath = req.file?.path
     if(!avatarLocalFilePath){

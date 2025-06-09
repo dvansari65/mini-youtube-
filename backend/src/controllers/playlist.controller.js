@@ -4,13 +4,16 @@ import AsyncHandler from "../utils/AsyncHandler.js";
 import { PlayList } from "../models/playlist.models.js";
 
 const createPlayList = AsyncHandler( async(req,res)=>{
-        const {title,description} = req.body
-        if(!title || !description){
+        const {title,description,owner} = req.body
+        const user = req.user?._id
+        
+        if(!title || !description || owner){
             throw new ApiError(401," all fields are mandatory")
         }
        const createdPlayList =  await PlayList.create({
             title:title,
-            description:description
+            description:description,
+            owner:user.toString()
         })
         if(!createdPlayList){
             throw new ApiError(401," play list not created ")
@@ -45,6 +48,7 @@ const addVideosToThePlaylist = AsyncHandler( async (req,res)=>{
     try {
         existingPlayList.videos.push(videoId)
         const updatedPlayList = await existingPlayList.save()
+
         if(!updatedPlayList){
             throw new ApiError(402,"video is not uploaded in the playlist")
         }
@@ -103,7 +107,7 @@ const removeVideoFromPlayList = AsyncHandler( async(req,res)=>{
 const updatePlayList = AsyncHandler( async(req,res)=>{
     const {title,description} = req.body
     const {playListId} = req.params
-    if(!title || !description){
+    if(!title && !description){
         throw new ApiError(402,"enter something in the title and description")
     }
     if(!playListId){

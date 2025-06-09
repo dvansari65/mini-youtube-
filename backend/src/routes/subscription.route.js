@@ -5,6 +5,6 @@ const subscriptionRouter = Router()
 
 subscriptionRouter.route("/toggle-subscription").post(verifyJwt,toggleSubscription)
 subscriptionRouter.route("/get-channel-subscriber/:channelId").get(verifyJwt,getChannelSubcribers)
-subscriptionRouter.route("/get-subscribed-channel/:channelId").get(verifyJwt,getSubcribedChannel)
+subscriptionRouter.route("/get-subscribed-channel").get(verifyJwt,getSubcribedChannel)
 subscriptionRouter.route("/subscribe-status/:channelId").get(verifyJwt,subscribeStatus)
 export {subscriptionRouter}

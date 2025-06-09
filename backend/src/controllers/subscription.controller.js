@@ -21,6 +21,9 @@ const toggleSubscription = AsyncHandler(async (req, res) => {
                 {
                     channel:channelId,
                     subscriber:user,
+                },
+                {
+                    new:true
                 }
             )
             const updatedChannel = await User.findByIdAndUpdate(
@@ -94,11 +97,11 @@ const getSubcribedChannel = AsyncHandler( async (req,res)=>{
     if(!user){
         throw new ApiError(404,"user not found")
     }
-    const subscribedChannel = await Subscription.find({subcriber:user}).populate("channel","userName avatar")
+    const subscribedChannel = await Subscription.find({subscriber:user}).populate("channel","userName avatar")
     if(!subscribedChannel){
         throw new ApiError(404,"there is no any channel you subscribed")
     }
-    const countSubscribedToChannel = await Subscription.countDocuments({subcriber:user})
+    const countSubscribedToChannel = await Subscription.countDocuments({subscriber:user})
     if(countSubscribedToChannel== undefined){
         throw new ApiError(404,"countSubscribedChannel is undefined")
     }
