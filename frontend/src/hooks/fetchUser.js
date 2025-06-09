@@ -6,7 +6,7 @@ function useFetchUser() {
 
   const fetchUser = async ()=>{
         const res = await axiosInstance.get('/users/get-current-user')
-        if(!User){
+        if(!res){
             console.error("response not obtain from backend")
         }
         setUser(res.data.data.newUser)

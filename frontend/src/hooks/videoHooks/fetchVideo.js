@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import axiosInstance from '../services/api'
+import axiosInstance from '../../services/api'
 
 function useFetchVideo(videoId) {
     const [videoData,setVideoData] = useState(null)

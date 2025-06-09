@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react'
-import axiosInstance from '../services/api'
+import axiosInstance from '../../services/api'
 import { useState } from 'react'
 function useFetchLikes(videoId) {
   const [videoLikesCount,setLikesCount] = useState(null)

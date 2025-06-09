@@ -6,7 +6,7 @@ import Profile from './Profile';
 import useFetchUser from '../hooks/fetchUser';
 import useChannelStatus from '../hooks/subscribeStatus';
 import useFetchLikesOfChanel from '../hooks/fetchLikesOfChanel';
-import useFetchMyVideos from '../hooks/fetchMyVideos';
+import useFetchMyVideos from '../hooks/videoHooks/fetchMyVideos';
 import emitter from '../eventEmitter';
 
 function MyProfile() {
@@ -15,7 +15,7 @@ function MyProfile() {
     const {User,fetchUser} = useFetchUser()
     const {numberOfSubscriber,fetchSubscriberCount,fetchSubscribedChannel,subscribedTo} = useChannelStatus(User?._id)
     const {channelLikes,fetchTotalChannelLikes}  = useFetchLikesOfChanel(User?._id)
-    const {myVideos,fetchVideos,error,setLoading,setError,loading} = useFetchMyVideos()
+    const {myVideos,error,setLoading,setError,loading} = useFetchMyVideos()
     const navigate = useNavigate()
     const handleProfileNavigate = ()=>{
         navigate('/')
@@ -29,7 +29,7 @@ function MyProfile() {
             fetchSubscriberCount()
             fetchTotalChannelLikes()
             fetchSubscribedChannel()
-            fetchVideos()
+            console.log("my videos:",myVideos.length)
             }
             emitter.on('userUpdated', handler)
             return ()=>{

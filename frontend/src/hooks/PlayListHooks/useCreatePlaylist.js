@@ -15,9 +15,6 @@ function useCreatePlaylist() {
         console.error("playlist can not be create!!",error)
     }
   }
-  useEffect(()=>{
-    createPlayList()
-  })
   return {playList,setplayList,createPlayList}
 
 }

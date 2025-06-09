@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
-import axiosInstance from '../services/api'
-import { useUser } from '../context/authcontext'
+import axiosInstance from '../../services/api'
+import { useUser } from '../../context/authcontext'
 
 function useComment(videoId) {   
     const {user} = useUser()

@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import useFetchUser from '../hooks/fetchUser';
 import useFetchLikesOfChanel from '../hooks/fetchLikesOfChanel';
 import useChannelStatus from '../hooks/subscribeStatus';
-import useFetchMyVideos from '../hooks/fetchMyVideos';
+import useFetchMyVideos from '../hooks/videoHooks/fetchMyVideos';
 import emitter from '../eventEmitter';
 function Profile() {
     const [isEditModalOpen, setIsEditModalOpen] = useState(false)

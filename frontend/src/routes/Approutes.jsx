@@ -12,7 +12,9 @@ import { useUser } from '../context/authcontext'
 import LikedVideos from '../pages/LikedVideos'
 import SearchResult from '../pages/SearchResult'
 import MyVideos from '../pages/MyVideos'
+import Playlist from '../components/Playlist'
 import { useState } from 'react'
+
 function Approutes() {
   const {user} = useUser()
   return (
@@ -26,6 +28,7 @@ function Approutes() {
       <Route path='/search-result' element={user? <SearchResult/> : <Navigate to={"/login"}/>} />
       <Route path='/liked' element={user? <LikedVideos/> : <Navigate to={"/login"}/>} />
       <Route path='/my-videos' element={user? <MyVideos/> : <Navigate to={"/login"}/>} />
+      <Route path='/playlists' element={user? <Playlist/> : <Navigate to={"/login"}/>} />
       </Route>
       <Route path='/register' element={ <Register/> } />
       <Route path='/login' element={ <Login/>} />

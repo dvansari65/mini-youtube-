@@ -1,5 +1,5 @@
 import React from 'react';
-import { HeartIcon, UserPlusIcon, SettingsIcon, UploadIcon, VideoIcon, Home } from 'lucide-react';
+import { HeartIcon, UserPlusIcon, SettingsIcon, UploadIcon, VideoIcon, Home, ListMusic } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { useUser } from '../context/authcontext';
 
@@ -47,6 +47,12 @@ const Sidebar = () => {
             label="My Videos" 
             to="/my-videos" 
             isActive={isActive('/my-videos')}
+          />
+          <SidebarItem 
+            icon={<ListMusic size={20} />} 
+            label="Playlists" 
+            to="/playlists" 
+            isActive={isActive('/playlists')}
           />
           <SidebarItem 
             icon={<SettingsIcon size={20} />} 
