@@ -5,7 +5,7 @@ import EditProfileModal from '../components/EditProfileModal';
 import Profile from './Profile';
 import useFetchUser from '../hooks/fetchUser';
 import useChannelStatus from '../hooks/subscribeStatus';
-import useFetchLikesOfChanel from '../hooks/fetchLikesOfChanel';
+import useFetchLikesOfChanel from '../hooks/LikesHooks/fetchLikesOfChanel';
 import useFetchMyVideos from '../hooks/videoHooks/fetchMyVideos';
 import emitter from '../eventEmitter';
 

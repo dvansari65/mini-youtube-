@@ -1,6 +1,6 @@
 import React from 'react'
 import { useState } from 'react'
-import axiosInstance from '../services/api'
+import axiosInstance from '../../services/api'
 function useFetchLikesOfChanel(channelId) {
     const [channelLikes,setChannelLikes] = useState(0)
 

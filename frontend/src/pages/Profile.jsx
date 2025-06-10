@@ -3,7 +3,7 @@ import { UserCircle, Users, Heart, Video, ChevronRight, Edit2, Settings, X } fro
 import axiosInstance from "../services/api"
 import { useNavigate } from 'react-router-dom';
 import useFetchUser from '../hooks/fetchUser';
-import useFetchLikesOfChanel from '../hooks/fetchLikesOfChanel';
+import useFetchLikesOfChanel from '../hooks/LikesHooks/fetchLikesOfChanel';
 import useChannelStatus from '../hooks/subscribeStatus';
 import useFetchMyVideos from '../hooks/videoHooks/fetchMyVideos';
 import emitter from '../eventEmitter';

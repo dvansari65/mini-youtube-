@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import useFetchVideo from '../hooks/fetchVideo';
-import useFetchLikes from '../hooks/fetchLikes';
+import useFetchVideo from '../hooks/videoHooks/fetchVideo';
+import useFetchLikes from '../hooks/LikesHooks/fetchLikes';
 import useChannelStatus from '../hooks/subscribeStatus';
-import useComment from '../hooks/fetchComment';
+import useComment from '../hooks/CommentHooks/fetchComment';
 import { ThumbsUp, Send } from 'lucide-react';
 import axiosInstance from '../services/api';
 import { useUser } from '../context/authcontext';

@@ -8,12 +8,16 @@ function useGetPlayLists() {
   const [message,setMessage] = useState('')
 
   const obtainAllPlaylist = async()=>{
+    setError('')
+    setLoading(true)
     try {
         const res = await axiosInstance.get("/playList/get-user-playlist")
         if(res.data.success){
             setMessage("all playlists obtain")
             setAllPlaylist(res.data.data.allPlayLists)
         }
+
+        console.log("response",res.data.data.allPlayLists)
         setError('')
     } catch (error) {
         console.error("failed to obtain all playlist",error)
@@ -23,9 +27,6 @@ function useGetPlayLists() {
     }
 }
 
-useEffect(()=>{
-    obtainAllPlaylist()
-},[])
 
 return {allPlaylist,error,loading,message,obtainAllPlaylist}
 
