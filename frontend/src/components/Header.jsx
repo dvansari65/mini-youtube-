@@ -1,18 +1,19 @@
 import React, { useState } from 'react';
-import { NavLink, useNavigate, useSearchParams } from 'react-router-dom';
+import { NavLink } from 'react-router-dom';
 import { Menu, X } from 'lucide-react';
 import LogoutModal from './LogoutModal';
 import SearchBar from './SearchBar';
+
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false)
-
+  const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
+  
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
   };
 
   return (
-    <header className="sticky top-0  left-0 right-0 z-50 bg-gradient-to-r from-blue-600 to-blue-500 shadow-lg">
+    <header className="sticky top-0 left-0 right-0 z-50 bg-gradient-to-r from-blue-600 to-blue-500 shadow-lg">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
@@ -34,7 +35,12 @@ const Header = () => {
               </div>
             </NavLink>
           </div>
-          <SearchBar />
+
+          {/* Search Bar */}
+          <div className="flex-1 max-w-2xl mx-4">
+            <SearchBar />
+          </div>
+
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-8">
             <NavLink

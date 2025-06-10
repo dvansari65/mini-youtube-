@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react'
 import axiosInstance from '../../services/api'
-
+import { useState } from 'react'
 function useGetPlayLists() {
   const [allPlaylist,setAllPlaylist] = useState([])
   const [error,setError] = useState('')
@@ -26,7 +26,9 @@ function useGetPlayLists() {
         setLoading(false)
     }
 }
-
+useEffect(()=>{
+    obtainAllPlaylist()
+},[])
 
 return {allPlaylist,error,loading,message,obtainAllPlaylist}
 

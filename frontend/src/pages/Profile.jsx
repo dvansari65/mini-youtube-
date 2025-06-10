@@ -22,7 +22,7 @@ function Profile() {
     const {User,fetchUser} = useFetchUser()
     const {numberOfSubscriber,fetchSubscriberCount} = useChannelStatus(User?._id)
    
-    const {myVideos,fetchVideos}= useFetchMyVideos()
+    const {myVideos,fetchMyVideos}= useFetchMyVideos()
     const {channelLikes,fetchTotalChannelLikes} = useFetchLikesOfChanel(User?._id)
 
     const handleNavigate=()=>{
@@ -33,7 +33,7 @@ function Profile() {
       fetchUser()
       fetchTotalChannelLikes()
       fetchSubscriberCount()
-      fetchVideos()
+      fetchMyVideos()
     },[])
 
     useEffect(()=>{

@@ -12,8 +12,11 @@ import { useUser } from '../context/authcontext'
 import LikedVideos from '../pages/LikedVideos'
 import SearchResult from '../pages/SearchResult'
 import MyVideos from '../pages/MyVideos'
-import Playlist from '../components/Playlist'
+
 import { useState } from 'react'
+import PlaylistEditModal from '../components/ModalPlaylist'
+import SinglePlaylist from '../pages/SinglePlaylist'
+import PlayList from '../pages/AllPlaylist'
 
 function Approutes() {
   const {user} = useUser()
@@ -28,7 +31,9 @@ function Approutes() {
       <Route path='/search-result' element={user? <SearchResult/> : <Navigate to={"/login"}/>} />
       <Route path='/liked' element={user? <LikedVideos/> : <Navigate to={"/login"}/>} />
       <Route path='/my-videos' element={user? <MyVideos/> : <Navigate to={"/login"}/>} />
-      <Route path='/playlists' element={user? <Playlist/> : <Navigate to={"/login"}/>} />
+      <Route path='/playlists' element={user? <PlayList/> : <Navigate to={"/login"}/>} />
+      <Route path='/PlaylistEditModal' element={user? <PlaylistEditModal/> : <Navigate to={"/login"}/>} />
+      <Route path='/SinglePlaylist/:playlistId' element={user? <SinglePlaylist/> : <Navigate to={"/login"}/>} />
       </Route>
       <Route path='/register' element={ <Register/> } />
       <Route path='/login' element={ <Login/>} />

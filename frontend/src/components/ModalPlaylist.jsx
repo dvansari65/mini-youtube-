@@ -1,9 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { X } from "lucide-react";
 
-import useUpdatePlaylist from "../hooks/playlistHooks/updatePlaylist";
-import useGetSinglePlaylist from "../hooks/playlistHooks/singlePlaylist";
-import { useParams } from "react-router-dom";
+import useUpdatePlaylist from "../hooks/playlistHooks/updatePlaylist.js";
 
 
 const PlaylistEditModal = ({ isOpen, onClose, onSave, playlist }) => {
@@ -15,10 +13,12 @@ const PlaylistEditModal = ({ isOpen, onClose, onSave, playlist }) => {
         description:updatedPlaylist.description || ""
       })
     }
-  },[playlist])
+  },[playlist,setUpdatedPlaylist])
 
-  const onSave = async()=>{
+  const handleSave = async()=>{
       await UpdatePlaylist()
+      onSave();
+      onClose()
   }
   if (!isOpen) return null;
 
@@ -74,7 +74,7 @@ const PlaylistEditModal = ({ isOpen, onClose, onSave, playlist }) => {
         </div>
 
         <button
-          onClick={onSave}
+          onClick={handleSave}
           className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 rounded-lg transition duration-200"
         >
          { updateLoading ? "saving..." : "save"}
