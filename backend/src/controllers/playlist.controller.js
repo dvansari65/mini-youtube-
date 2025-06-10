@@ -4,24 +4,29 @@ import AsyncHandler from "../utils/AsyncHandler.js";
 import { PlayList } from "../models/playlist.models.js";
 
 const createPlayList = AsyncHandler( async(req,res)=>{
-        const {title,description,owner} = req.body
+        const {title,description} = req.body
+        
         const user = req.user?._id
         
-        if(!title || !description || owner){
+        if(!title || !description){
             throw new ApiError(401," all fields are mandatory")
         }
-       const createdPlayList =  await PlayList.create({
+       const createdPlayList =  await PlayList.create(
+        {
             title:title,
             description:description,
-            owner:user.toString()
-        })
+            owner:user,
+            new:true
+        }
+        )
+        const countPlaylist = await PlayList.countDocuments({})
         if(!createdPlayList){
             throw new ApiError(401," play list not created ")
         }
         return res
         .status(200)
         .json(
-            new ApiResponse(200,createdPlayList,"playlist successfully created")
+            new ApiResponse(200,{createdPlayList,countPlaylist},"playlist successfully created")
         )
 })
 
@@ -183,5 +188,27 @@ const getUserPlayList  = AsyncHandler( async (req,res)=>{
 })
 
 
+const getSinglePlaylist = AsyncHandler( async (req,res)=>{
+    const user = req.user._id
+    const {playlistId} = req.params
+    if(!user){
+        throw new ApiError(400,"unauthorized request!")
+    }
+    if(!playlistId){
+        throw new ApiError(404,"please provide playlist id ")
+    }
+    const playlist = await PlayList.findById(playlistId).populate('owner',"userName title description ")
+    if(!playlist){
+        throw new ApiError(404,"playlist not found")
+    }
+    return res
+    .status(200)
+    .json(
+        new ApiResponse(200,playlist,"you have got your playlist")
+    )
 
-export {createPlayList,addVideosToThePlaylist,removeVideoFromPlayList,updatePlayList,deletePlayList,getUserPlayList}
+})
+
+
+export {createPlayList,addVideosToThePlaylist,removeVideoFromPlayList,updatePlayList,deletePlayList,getSinglePlaylist,getUserPlayList}
+

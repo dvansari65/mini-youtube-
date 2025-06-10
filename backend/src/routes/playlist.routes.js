@@ -4,6 +4,7 @@ import  {
     removeVideoFromPlayList,
     updatePlayList,
     deletePlayList,
+    getSinglePlaylist,
     getUserPlayList} from "../controllers/playlist.controller.js"
 import verifyJwt from "../middlewares/user.middleware.js";
 import { Router } from "express";
@@ -15,6 +16,7 @@ playListRouter.route("/remove-video/:playListId/:videoId").delete(verifyJwt,remo
 playListRouter.route("/update-playlist/:playListId").patch(verifyJwt,updatePlayList)
 playListRouter.route("/delete-playlist/:playListId").delete(verifyJwt,deletePlayList)
 playListRouter.route("/get-user-playlist").get(verifyJwt,getUserPlayList)
+playListRouter.route("/get-single-playlist/:playlistId").get(verifyJwt,getSinglePlaylist)
 
 
 
