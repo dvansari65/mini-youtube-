@@ -12,12 +12,13 @@ function SearchResult() {
   const [hasMore, setHasMore] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [hasSearched, setHasSearched] = useState(false);
 
   const query = searchParams.get('q');
   const LIMIT = 10;
   const observer = useRef();
 
-  const  debouncedQuery  = useDebounce(query, 500);
+  const debouncedQuery = useDebounce(query, 500);
 
   const navigateToWatchVideo = (videoId) => {
     if (loading) return;
@@ -28,6 +29,8 @@ function SearchResult() {
     setVideos([]);
     setPage(1);
     setHasMore(true);
+    setError('');
+    setHasSearched(false);
   }, [debouncedQuery]);
 
   const lastVideoRef = useCallback(
@@ -52,20 +55,22 @@ function SearchResult() {
     if (!debouncedQuery) return;
     setLoading(true);
     setError('');
+    setHasSearched(true);
 
     const fetchSearchResults = async () => {
       try {
-        console.log('Fetching search results for:', debouncedQuery);
         const res = await axiosInstance.get(
           `/videos/search-videos?q=${encodeURIComponent(debouncedQuery.trim())}&page=${page}&limit=${LIMIT}`,
           { signal: controller.signal }
         );
 
-        console.log('Search response:', res.data);
         const newVideos = res.data?.data?.videos || [];
         
         if (newVideos.length === 0) {
           setHasMore(false);
+          if (page === 1) {
+            setVideos([]);
+          }
           return;
         }
 
@@ -75,8 +80,17 @@ function SearchResult() {
           return [...prev, ...filteredIds];
         });
         setHasMore(newVideos.length === LIMIT);
+      
       } catch (error) {
         if (error.name === 'AbortError') return;
+        
+        // Handle network errors or server errors
+        if (error.response?.status === 404) {
+          setVideos([]);
+          setHasMore(false);
+          return;
+        }
+        
         console.error('Error fetching search results:', error);
         setError('Failed to fetch search results. Please try again.');
       } finally {
@@ -122,7 +136,7 @@ function SearchResult() {
         Search Results for "{query}"
       </h1>
 
-      {videos.length === 0 && !loading ? (
+      {hasSearched && videos.length === 0 && !loading ? (
         <div className="text-center py-12">
           <AlertCircle className="w-12 h-12 text-gray-400 mx-auto mb-4" />
           <p className="text-gray-600 dark:text-gray-400 text-lg">

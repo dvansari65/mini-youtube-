@@ -5,7 +5,7 @@ import Layout from '../utils/Layout'
 import UploadVideo from '../pages/UploadVideo'
 import Home from "../pages/Home"
 import Login from "../pages/Login"
-import WatchVideo from '../pages/watchVideo'
+import WatchVideo from "../pages/WatchVideo"
 import Register from '../pages/register'
 import MyProfile from '../pages/myProfile'
 import { useUser } from '../context/authcontext'
