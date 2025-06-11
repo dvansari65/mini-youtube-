@@ -3,6 +3,7 @@ import { NavLink } from 'react-router-dom';
 import { Menu, X } from 'lucide-react';
 import LogoutModal from './LogoutModal';
 import SearchBar from './SearchBar';
+import ProfilePicture from "./profilePicture"
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -16,17 +17,10 @@ const Header = () => {
     <header className="sticky top-0 left-0 right-0 z-50 bg-gradient-to-r from-blue-600 to-blue-500 shadow-lg">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
-          {/* Logo */}
-          <div className="flex-shrink-0 flex items-center">
+          {/* Logo and Profile */}
+          <div className="flex items-center space-x-4">
             <NavLink to="/" className="flex items-center space-x-2 group">
-              <div className="relative">
-                <div className="w-10 h-10 bg-gradient-to-br from-red-500 to-red-700 rounded-lg shadow-lg transform group-hover:rotate-3 transition-transform duration-300">
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="w-5 h-5 border-2 border-white rounded-sm transform rotate-45 translate-x-[1px]"></div>
-                    <div className="absolute w-3 h-3 bg-white rounded-sm transform rotate-45 translate-x-[2px]"></div>
-                  </div>
-                </div>
-              </div>
+              <ProfilePicture />
               <div className="flex flex-col">
                 <h1 className="text-2xl font-bold text-white tracking-tight group-hover:text-blue-100 transition-colors">
                   Tube<span className="text-red-400">Hub</span>
