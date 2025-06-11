@@ -21,7 +21,7 @@ videoRouter.route("/upload-content").post(verifyJwt,
       ]),
      uploadVideosContent)
 videoRouter.route("/update-video/:videoId").patch(verifyJwt,updateVideo)
-videoRouter.route("/watch-video/:videoId").get(verifyJwt,watchVideo)
+videoRouter.route("/watch-video/:videoId").get(watchVideo)
 videoRouter.route("/delete-video/:videoId").delete(verifyJwt,deleteVideo)
 videoRouter.route("/get-video/:videoId").get(verifyJwt,getVideo)
 videoRouter.route("/get-all-video").get(verifyJwt,getAllVideos)

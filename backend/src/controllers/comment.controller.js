@@ -2,7 +2,7 @@ import ApiError from "../utils/ApiError.js"
 import AsyncHandler from "../utils/AsyncHandler.js"
 import { Comment } from "../models/comment.models.js"
 import { Video } from "../models/video.models.js"
-
+import {User} from "../models/user.models.js"
 import ApiResponse from "../utils/ApiResponse.js"
 import mongoose from "mongoose"
 
@@ -47,7 +47,13 @@ const addComments= AsyncHandler( async (req,res)=>{
     console.log("addComments controller triggered")
         const {videoId} = req.query
         const {content}  = req.body
-        const user  = req.user?._id
+        const user = req.user?._id
+
+        const userName = await User.findById(user)
+        console.log("username",userName)
+        if(!userName){
+            throw new ApiError(404,"user not found ")
+        }
 
         
         if(!content || content.trim().length==0 ){
@@ -68,7 +74,7 @@ const addComments= AsyncHandler( async (req,res)=>{
          try {
             newComment = await Comment.create({
                content,
-               owner:user,
+               owner:userName.userName.toString(),
                video: videoId || undefined,
            })
             const commentCount = await Comment.countDocuments({video:videoId})

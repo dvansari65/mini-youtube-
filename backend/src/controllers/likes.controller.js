@@ -19,8 +19,9 @@ const toggleVideoLike = AsyncHandler(async (req, res) => {
       const isLiked = await Like.findOne({ video: videoId, likedBy: user });
       let updatedVideo;
       let likesCount;
-  
+       
       if (isLiked) {
+        
         // Unlike the video
         await Like.deleteOne({ video: videoId, likedBy: user });
   
@@ -31,6 +32,7 @@ const toggleVideoLike = AsyncHandler(async (req, res) => {
         },
           { new: true }
         );
+       
   
         // Ensure non-negative count
         if (updatedVideo.likesCount < 0) {
@@ -223,4 +225,52 @@ const totalUserVideoslikes = AsyncHandler( async(req,res)=>{
         throw new ApiError(500,"something went wrong")
        }
 })
-export {toggleVideoLike,toggleCommentLike,toggleTweetLike,getAllLikedVideos,totalUserVideoslikes} 
+
+const numberOfLikesOfVideos = AsyncHandler( async (req,res)=>{
+    const {videoId} = req.params
+    const user = req.user?._id
+
+    if(!videoId){
+        throw new ApiError(404,"please provide video id ")
+    }
+    try {
+        const videoLikes = await Like.countDocuments({video:videoId})
+        
+        return res
+        .status(200)
+        .json(
+            new ApiResponse(200,{videoLikes:videoLikes},"total likes of videos")
+        )
+    } catch (error) {
+        console.error("failed to fetched likes count",error)
+    }
+
+})
+
+const checkLikeStatus = AsyncHandler(async (req, res) => {
+    const { videoId } = req.params;
+    const user = req.user?._id;
+
+    if (!videoId) throw new ApiError(404, "video not found");
+    if (!user) throw new ApiError(401, "unauthorized request");
+
+    try {
+        const isLiked = await Like.findOne({ video: videoId, likedBy: user });
+        return res.status(200).json(
+            new ApiResponse(200, { isLiked: !!isLiked }, "Like status fetched successfully")
+        );
+    } catch (error) {
+        console.error("Error checking like status:", error);
+        throw new ApiError(500, "Something went wrong while checking like status");
+    }
+});
+
+export {
+    toggleVideoLike,
+    toggleCommentLike,
+    numberOfLikesOfVideos,
+    toggleTweetLike,
+    getAllLikedVideos,
+    totalUserVideoslikes,
+    checkLikeStatus
+} 
