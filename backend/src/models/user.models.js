@@ -33,7 +33,6 @@ const userSchema = new Schema({
     },
     avatar:{
         type:String,
-        required:true
     },
     likedVideosByUser:{
         type:mongoose.Schema.Types.ObjectId,

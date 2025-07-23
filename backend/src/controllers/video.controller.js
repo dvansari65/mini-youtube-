@@ -49,90 +49,90 @@ const searchVideos = AsyncHandler( async(req,res)=>{
 })
 
 const uploadVideosContent = AsyncHandler ( async (req,res)=>{
-    const {title,description,duration,isPublished}  = req.body
+    // const {title,description,duration,isPublished}  = req.body
 
-    if (!req.files || req.files.length === 0) {
-        throw new ApiError(401, "Please provide video file(s)");
-      }
-    const thumbnailLocalPath = req.files.thumbNail?.[0]?.path;
+    // if (!req.files || req.files.length === 0) {
+    //     throw new ApiError(401, "Please provide video file(s)");
+    //   }
+    // const thumbnailLocalPath = req.files.thumbNail?.[0]?.path;
 
-    if(!thumbnailLocalPath){
-        throw new ApiError(401,"please provide thumbnail local path")
-    }
-    const uploadedThumbnail = await uploadOnCloudinary(thumbnailLocalPath,"image")
-    try {
-        if(!uploadedThumbnail || !uploadedThumbnail.url){
-          if(fs.existsSync(thumbnailLocalPath)){
-            fs.unlinkSync(thumbnailLocalPath)
-          }
-        }
-    } catch (error) {
-        console.error("Failed to delete local file:", error.message);
-    }  
+    // if(!thumbnailLocalPath){
+    //     throw new ApiError(401,"please provide thumbnail local path")
+    // }
+    // const uploadedThumbnail = await uploadOnCloudinary(thumbnailLocalPath,"image")
+    // try {
+    //     if(!uploadedThumbnail || !uploadedThumbnail.url){
+    //       if(fs.existsSync(thumbnailLocalPath)){
+    //         fs.unlinkSync(thumbnailLocalPath)
+    //       }
+    //     }
+    // } catch (error) {
+    //     console.error("Failed to delete local file:", error.message);
+    // }  
 
 
-    const videoLocalPath = req.files.videos?.[0]?.path
-    console.log("videoLocalPath:",videoLocalPath)
-    if(!videoLocalPath){
-        throw new ApiError(401,"please provide video local path")
-    }
+    // const videoLocalPath = req.files.videos?.[0]?.path
+    // console.log("videoLocalPath:",videoLocalPath)
+    // if(!videoLocalPath){
+    //     throw new ApiError(401,"please provide video local path")
+    // }
    
-    const uploadedVideo = await uploadOnCloudinary(videoLocalPath,"video")
-    console.log("Uploaded video details:", uploadedVideo);
+    // const uploadedVideo = await uploadOnCloudinary(videoLocalPath,"video")
+    // console.log("Uploaded video details:", uploadedVideo);
 
-    try {
-        if(!uploadedVideo || !uploadedVideo.url){
-          if(fs.existsSync(videoLocalPath)){
-            fs.unlinkSync(videoLocalPath)
-          }
-        }
-    } catch (error) {
-        console.error("Failed to delete local file:", error.message);
-    }
+    // try {
+    //     if(!uploadedVideo || !uploadedVideo.url){
+    //       if(fs.existsSync(videoLocalPath)){
+    //         fs.unlinkSync(videoLocalPath)
+    //       }
+    //     }
+    // } catch (error) {
+    //     console.error("Failed to delete local file:", error.message);
+    // }
 
-    if( !title || !description || !duration){
-        throw new ApiError(401,"all fields are required!")
-    }
+    // if( !title || !description || !duration){
+    //     throw new ApiError(401,"all fields are required!")
+    // }
 
-    const user  = req.user?._id
-    console.log("Owner (user ID):", user);
-    if(!user){
-        throw new ApiError(404,"user not found")
-    }
+    // const user  = req.user?._id
+    // console.log("Owner (user ID):", user);
+    // if(!user){
+    //     throw new ApiError(404,"user not found")
+    // }
 
-    const isUserCorrect = await User.findById(user)
-    if(!isUserCorrect){
-        throw new ApiError(404,"user not found")
-    }
+    // const isUserCorrect = await User.findById(user)
+    // if(!isUserCorrect){
+    //     throw new ApiError(404,"user not found")
+    // }
 
-    console.log("req.files data >",req.files)
+    // console.log("req.files data >",req.files)
 
-    let videosDetailsFromUser;
-    try {
-     videosDetailsFromUser =  await Video.create({
-         thumbNail:uploadedThumbnail.url,
-         title:req.body.title,
-         description:req.body.description,
-         owner : user,
-         duration,
-         videoFile:uploadedVideo.url,
-         isPublished:isPublished || false,
-     })
+    // let videosDetailsFromUser;
+    // try {
+    //  videosDetailsFromUser =  await Video.create({
+    //      thumbNail:uploadedThumbnail.url,
+    //      title:req.body.title,
+    //      description:req.body.description,
+    //      owner : user,
+    //      duration,
+    //      videoFile:uploadedVideo.url,
+    //      isPublished:isPublished || false,
+    //  })
 
-    } catch (error) {
-        throw new ApiError(500,"video not uploaded ")
-    }
-    console.log("Video saved to database:", videosDetailsFromUser);
+    // } catch (error) {
+    //     throw new ApiError(500,"video not uploaded ")
+    // }
+    // console.log("Video saved to database:", videosDetailsFromUser);
 
-    if(!videosDetailsFromUser){
-        throw new ApiError(400,"fill all the information")
-    }
+    // if(!videosDetailsFromUser){
+    //     throw new ApiError(400,"fill all the information")
+    // }
 
-    return res
-    .status(200)
-    .json(
-        new ApiResponse(200,videosDetailsFromUser,"content uploaded successfully!")
-    )
+    // return res
+    // .status(200)
+    // .json(
+    //     new ApiResponse(200,videosDetailsFromUser,"content uploaded successfully!")
+    // )
 
 })
 
