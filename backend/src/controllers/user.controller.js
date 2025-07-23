@@ -285,37 +285,41 @@ const updateAccountDetails = AsyncHandler(async (req, res) => {
 });
 
 const updateAvatar = AsyncHandler(async (req, res) => {
-    const avatarLocalFilePath = req.file?.path;
-    if (!avatarLocalFilePath) {
-        throw new ApiError(404, "avatar file path  not found  ");
+    const avatarFile = req.files?.avatar?.[0]
+    const userId = req.user?._id
+    if(!userId){
+        throw new ApiError("user not found!",404)
     }
-    const userImageAvatar = await uploadOnCloudinary(avatarLocalFilePath);
-
-    if (!userImageAvatar.url) {
-        throw new ApiError(404, "avatar file url is required  ");
+    const user = await User.findById(userId)
+    if(!user){
+        throw new ApiError("user not exist!",411)
     }
+    const avatarUrl = user?.avatar
+    console.log("avatarurl:",avatarUrl)
 
-    let user;
-    user = await User.findById(req.user?._id);
-
-    if (user.avatar) {
-        const publicId = getPublicIdFromUrl(user.avatar);
-        await deleteFromCloudinary(publicId);
-    }
-
-    user = await User.findByIdAndUpdate(
-        req.user?._id,
-        {
-            $set: { avatar: userImageAvatar.url },
-        },
-        {
-            new: true,
+    if(avatarUrl){
+        try {
+            const urlParts = avatarUrl.split("/")
+            const fileName = urlParts[urlParts.length - 1]
+            const fileId = fileName.split(".")[0]
+            if(fileId){
+                await imagekit.deleteFile(fileId)
+            }
+        } catch (error) {
+            console.log("failed to delete image!",error)
         }
-    ).select("-password");
-
-    return res
-        .status(200)
-        .json(new ApiResponse(200, user, "avatar image updated successfully"));
+    }
+    const avatar = await imagekit.upload({
+        file:fs.readFileSync(avatarFile?.path),
+        fileName:avatarFile?.originalname
+    })
+    if(!avatar){
+        throw new ApiError("failed to upload avatar!",500)
+    }
+    return res.status(200).json(200,{
+        success:true,
+        message:"avatar updated successfully!"
+    })
 });
 
 const updateCoverImage = AsyncHandler(async (req, res) => {
