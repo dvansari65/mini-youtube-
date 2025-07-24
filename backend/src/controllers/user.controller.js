@@ -285,7 +285,7 @@ const updateAccountDetails = AsyncHandler(async (req, res) => {
 });
 
 const updateAvatar = AsyncHandler(async (req, res) => {
-    const avatarFile = req.files?.avatar?.[0]
+    const avatarFile = req.file
     const userId = req.user?._id
     if(!userId){
         throw new ApiError("user not found!",404)
@@ -323,30 +323,43 @@ const updateAvatar = AsyncHandler(async (req, res) => {
 });
 
 const updateCoverImage = AsyncHandler(async (req, res) => {
-    const coverImageLocalPath = req.file?.path;
-    if (!coverImageLocalPath) {
-        throw new ApiError(404, "cover image  file path  not found  ");
+    const coverImage = req.file
+    console.log("coverimage:",coverImage)
+    const userId = req.user?._id
+    if(!userId){
+        throw new ApiError("please logged in first!",401)
     }
-
-    const coverImage = await uploadOnCloudinary(coverImageLocalPath);
-
-    if (!coverImageLocalPath.url) {
-        throw new ApiError(404, "cover image file url is required  ");
+    if(!coverImage){
+        throw new ApiError(" cover image is missing!")
     }
-
-    const user = await User.findByIdAndUpdate(
-        req.user?._id,
-        {
-            $set: { coverImage: coverImage.url },
-        },
-        {
-            new: true,
+    const user = await User.findById(userId)
+    if(!user){
+        return res.status(404).json({
+            message:"user does not exist!",
+            success:false
+        })
+    }
+    const imageUrl = user?.coverImage
+    try {
+        const urlParts = imageUrl.split("/")
+        const fileName = urlParts[urlParts.length - 1]
+        const fileId = fileName.split(".")[0]
+        if(fileId){
+            await imagekit.deleteFile(fileId)
         }
-    ).select("-password");
+    } catch (error) {
+        console.log("failed to delete old cover Image!",error)
+    }
+    const uploadedCoverImage = await imagekit.upload({
+        file:fs.readFileSync(coverImage?.path),
+        fileName:coverImage?.originalname
+    })
+    return res.status(200).json({
+        message:"cover image updated successfully!",
+        success:true,
+        coverImage:uploadedCoverImage?.url
+    })
 
-    return res
-        .status(200)
-        .json(new ApiResponse(200, user, "cover image image updated successfully"));
 });
 
 const getUserChannelProfile = AsyncHandler(async (req, res) => {
