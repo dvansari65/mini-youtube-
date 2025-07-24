@@ -3,9 +3,9 @@ import ApiError from "../utils/ApiError.js";
 import AsyncHandler from "../utils/AsyncHandler.js";
 import { User } from "../models/user.models.js";
 import ApiResponse from "../utils/ApiResponse.js";
-import { uploadOnCloudinary } from "../utils/cloudinary.js";
 import fs from "fs"
 import imagekit from "../imagekit/imagekit.js";
+import { deleteFileFromImagekit } from "../utils/deleteHandler.js";
 
 
 const searchVideos = AsyncHandler( async(req,res)=>{
@@ -51,9 +51,10 @@ const searchVideos = AsyncHandler( async(req,res)=>{
 
 const uploadVideosContent = AsyncHandler ( async (req,res)=>{
     const {title,description,duration,isPublished}  = req.body
+    const user = req.user?._id
     const thumbNail = req.files?.thumbNail?.[0]
     const videoFile = req.files?.videos?.[0]
-   console.log("video file and thumbnail,",videoFile , ":", thumbNail)
+   
     if(!thumbNail || !videoFile){
       throw new ApiError("thumbnail or videofile is missing!",411)
     }
@@ -77,7 +78,10 @@ const uploadVideosContent = AsyncHandler ( async (req,res)=>{
       duration,
       isPublished,
       thumbNail:uploadedThumbNail.url,
-      videoFile:uploadedVideoFile.url
+      thumbNailFileId: uploadedThumbNail.fileId,
+      videoFile:uploadedVideoFile.url,
+      videoFileId:uploadedVideoFile.fileId,
+      owner:user
     })
     if(!video){
       throw new ApiError("failed to create video!",500)
@@ -196,7 +200,6 @@ const updateVideo = AsyncHandler(async (req, res) => {
 const deleteVideo = AsyncHandler (async (req,res)=>{
    const {videoId} = req.params
    const user = req.user?._id
-   console.log("req.file.path:",req.file?.path)
    if(!videoId){
     throw new ApiError(400,"invalid request")
    }
@@ -206,27 +209,27 @@ const deleteVideo = AsyncHandler (async (req,res)=>{
     throw new ApiError(401,"video not found in database")
    }
 
-   if(video.owner.toString() !== user.toString()){
+   if(video.owner?.toString() !== user?.toString()){
     throw new ApiError(404,"invalid user")
    }
 
    try {
-    await Video.deleteOne(video)
+    await Video.findByIdAndDelete(videoId)
+    await deleteFileFromImagekit(video?.videoFileId)
+    await deleteFileFromImagekit(video?.thumbNailFileId)
+    return res
+      .status(200)
+      .json(
+      new ApiResponse(
+        200,
+        {},
+        "video deleted successfully"
+      )
+    )
    } catch (error) {
     console.error("Error deleting video:", error.message);
     throw new ApiError(500, "Something went wrong");
    }
-
-   return res
-   .status(200)
-   .json(
-    new ApiResponse(
-        200,
-        {},
-        "video deleted successfully"
-    )
-   )
-
 })
 const getVideo = AsyncHandler ( async (req,res)=>{
     const {videoId} = req.params
@@ -239,8 +242,7 @@ const getVideo = AsyncHandler ( async (req,res)=>{
     if(!video){
         throw new ApiError(401,"video not found")
     }
-
-    return res
+  return res
     .status(200)
     .json(
         new ApiResponse(
@@ -252,9 +254,7 @@ const getVideo = AsyncHandler ( async (req,res)=>{
 })
 
 const getAllVideos = AsyncHandler ( async (req,res)=>{
-   
     const videos = await Video.find().populate("owner","userName")
-    
     return res
     .status(200)
     .json(
