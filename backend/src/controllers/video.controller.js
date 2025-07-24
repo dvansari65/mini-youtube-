@@ -5,6 +5,7 @@ import { User } from "../models/user.models.js";
 import ApiResponse from "../utils/ApiResponse.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
 import fs from "fs"
+import imagekit from "../imagekit/imagekit.js";
 
 
 const searchVideos = AsyncHandler( async(req,res)=>{
@@ -49,90 +50,45 @@ const searchVideos = AsyncHandler( async(req,res)=>{
 })
 
 const uploadVideosContent = AsyncHandler ( async (req,res)=>{
-    // const {title,description,duration,isPublished}  = req.body
-
-    // if (!req.files || req.files.length === 0) {
-    //     throw new ApiError(401, "Please provide video file(s)");
-    //   }
-    // const thumbnailLocalPath = req.files.thumbNail?.[0]?.path;
-
-    // if(!thumbnailLocalPath){
-    //     throw new ApiError(401,"please provide thumbnail local path")
-    // }
-    // const uploadedThumbnail = await uploadOnCloudinary(thumbnailLocalPath,"image")
-    // try {
-    //     if(!uploadedThumbnail || !uploadedThumbnail.url){
-    //       if(fs.existsSync(thumbnailLocalPath)){
-    //         fs.unlinkSync(thumbnailLocalPath)
-    //       }
-    //     }
-    // } catch (error) {
-    //     console.error("Failed to delete local file:", error.message);
-    // }  
-
-
-    // const videoLocalPath = req.files.videos?.[0]?.path
-    // console.log("videoLocalPath:",videoLocalPath)
-    // if(!videoLocalPath){
-    //     throw new ApiError(401,"please provide video local path")
-    // }
-   
-    // const uploadedVideo = await uploadOnCloudinary(videoLocalPath,"video")
-    // console.log("Uploaded video details:", uploadedVideo);
-
-    // try {
-    //     if(!uploadedVideo || !uploadedVideo.url){
-    //       if(fs.existsSync(videoLocalPath)){
-    //         fs.unlinkSync(videoLocalPath)
-    //       }
-    //     }
-    // } catch (error) {
-    //     console.error("Failed to delete local file:", error.message);
-    // }
-
-    // if( !title || !description || !duration){
-    //     throw new ApiError(401,"all fields are required!")
-    // }
-
-    // const user  = req.user?._id
-    // console.log("Owner (user ID):", user);
-    // if(!user){
-    //     throw new ApiError(404,"user not found")
-    // }
-
-    // const isUserCorrect = await User.findById(user)
-    // if(!isUserCorrect){
-    //     throw new ApiError(404,"user not found")
-    // }
-
-    // console.log("req.files data >",req.files)
-
-    // let videosDetailsFromUser;
-    // try {
-    //  videosDetailsFromUser =  await Video.create({
-    //      thumbNail:uploadedThumbnail.url,
-    //      title:req.body.title,
-    //      description:req.body.description,
-    //      owner : user,
-    //      duration,
-    //      videoFile:uploadedVideo.url,
-    //      isPublished:isPublished || false,
-    //  })
-
-    // } catch (error) {
-    //     throw new ApiError(500,"video not uploaded ")
-    // }
-    // console.log("Video saved to database:", videosDetailsFromUser);
-
-    // if(!videosDetailsFromUser){
-    //     throw new ApiError(400,"fill all the information")
-    // }
-
-    // return res
-    // .status(200)
-    // .json(
-    //     new ApiResponse(200,videosDetailsFromUser,"content uploaded successfully!")
-    // )
+    const {title,description,duration,isPublished}  = req.body
+    const thumbNail = req.files?.thumbNail?.[0]
+    const videoFile = req.files?.videos?.[0]
+   console.log("video file and thumbnail,",videoFile , ":", thumbNail)
+    if(!thumbNail || !videoFile){
+      throw new ApiError("thumbnail or videofile is missing!",411)
+    }
+    if(!title || !description || !duration || !isPublished){
+      throw new ApiError("please provide all the fields!",411)
+    }
+    const uploadedThumbNail = await imagekit.upload({
+      file:fs.readFileSync(thumbNail?.path),
+      fileName : thumbNail?.originalname
+    })
+    const uploadedVideoFile = await imagekit.upload({
+      file:fs.readFileSync(videoFile?.path),
+      fileName:videoFile?.originalname
+    })
+    if(!uploadedThumbNail || !uploadedVideoFile){
+      throw new ApiError("failed t upload video!",500)
+    }
+    const video = await Video.create({
+      title,
+      description,
+      duration,
+      isPublished,
+      thumbNail:uploadedThumbNail.url,
+      videoFile:uploadedVideoFile.url
+    })
+    if(!video){
+      throw new ApiError("failed to create video!",500)
+    }
+    return res.status(200).json(
+      new ApiResponse(200,{
+        message:"video uplaoded successfully!",
+        success:true,
+        video
+      })
+    )
 
 })
 
