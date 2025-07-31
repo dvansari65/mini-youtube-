@@ -17,8 +17,9 @@ export const UserProvider = ({ children }) => {
   
   // Check if user is already logged in (e.g., check localStorage)
   useEffect(() => {
+    const authToken = localStorage.getItem("token")
     const storedUserRaw = localStorage.getItem("user")
-    if(storedUserRaw && storedUserRaw !== "undefined"){
+    if(storedUserRaw && storedUserRaw !== "undefined" || authToken){
         try {
           const storedUser = JSON.parse(storedUserRaw)
           setUser(storedUser)
@@ -26,6 +27,9 @@ export const UserProvider = ({ children }) => {
           console.error("Error parsing stored user:",error)
           localStorage.removeItem("user")
           localStorage.removeItem("token")
+          setError(error.data?.message || "failed to fetch user")
+        }finally{
+          setLoading(false)
         }
     }
     setLoading(false);
@@ -36,17 +40,17 @@ export const UserProvider = ({ children }) => {
     try {
       const response = await axiosInstance.post('/users/login', { userName, password });
       const loggedInUser = response.data.data.loggedInUser;
-      console.log("Login response:", response.data);
-
+      // console.log("Login response:", response.data);
       localStorage.setItem('user', JSON.stringify(loggedInUser));
       localStorage.setItem('token', response.data.data.accessToken);
       setUser(loggedInUser);
-      
       setError(null);
       return true;
     } catch (err) {
       setError(err.response?.data?.message || 'Login failed. Please try again.');
       return false;
+    }finally{
+      setLoading(false)
     }
   };
 
@@ -54,8 +58,7 @@ export const UserProvider = ({ children }) => {
   const logout = () => {
     localStorage.removeItem('user'); // Remove user info from localStorage
     localStorage.removeItem('token'); // Remove token from localStorage
-    setUser(null);
-   
+    setUser(null)
   };
 
   return (

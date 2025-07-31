@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 
 import { Routes,Route, Navigate } from 'react-router-dom'
 import Layout from '../utils/Layout'
@@ -12,15 +12,15 @@ import { useUser } from '../context/authcontext'
 import LikedVideos from '../pages/LikedVideos'
 import SearchResult from '../pages/SearchResult'
 import MyVideos from '../pages/MyVideos'
-
-import { useState } from 'react'
 import PlaylistEditModal from '../components/ModalPlaylist'
 import SinglePlaylist from '../pages/SinglePlaylist'
 import PlayList from '../pages/AllPlaylist'
 
 function Approutes() {
-  const {user} = useUser()
-  return (
+  const {user,loading,error} = useUser()
+  if(error) return <div className='w-full text-center text-2xl text-gray-400'>something went wrong!</div>
+
+  return loading ? <div>loading....</div> : (
     <Routes>
       <Route element={<Layout/>}>
       <Route path='/' element={user? <Home/> : <Navigate to={"/login"}/>} />

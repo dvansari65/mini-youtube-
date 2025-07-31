@@ -25,7 +25,7 @@ function Register() {
         if (files) {
             setFormData(prev => ({
                 ...prev,
-                [name]: files[0]
+                [name]: files?.[0]
             }));
         } else {
             setFormData(prev => ({
@@ -61,7 +61,7 @@ function Register() {
                     headers: {
                         'Content-Type': 'multipart/form-data'
                     }
-                }
+                },
             );
 
             console.log('Registration response:', response.data);

@@ -21,14 +21,20 @@ function Login() {
             e.preventDefault();
             setError('')
             setLoading(true)
-           
-            const success =  await login(formData.userName,formData.password)
-            console.log("succes res:",success)
-            if(success){
-             setError("")
-             navigate("/")
-            }else{
-                setError("password or user name is wrong")
+            try {
+                const success =  await login(formData.userName,formData.password)
+                console.log("succes res:",success)
+                if(success){
+                 setError("")
+                 navigate("/")
+                }else{
+                    setError("password or user name is wrong")
+                    setLoading(false)
+                }
+            } catch (error) {
+                console.error("failed logged in!",error)
+                setError(error.data.message || "something went wrong!")
+            }finally{
                 setLoading(false)
             }
             

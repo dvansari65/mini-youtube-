@@ -50,7 +50,7 @@ function ProfilePicture() {
       icon: <LogOut className="w-4 h-4" />,
       label: 'Sign Out',
       onClick: () => {
-        // Add your sign out logic here
+        
         navigate('/login');
       }
     }
