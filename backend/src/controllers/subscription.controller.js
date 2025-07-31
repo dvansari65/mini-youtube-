@@ -73,22 +73,23 @@ const getChannelSubcribers = AsyncHandler( async (req,res)=>{
     if(!channelId){
         throw new ApiError(404,"user not found ")
     }
-    console.log("user:",channelId)
-    const subcribersOfChannel = await Subscription.find({channel:channelId})
+    const [subscribers,numberOfSubscriber] = await Promise.all([
+        Subscription.find({channel:channelId}),
+        Subscription.countDocuments({channel:channelId})
+    ]) 
    
-    
-    if(!subcribersOfChannel){
+    if(!subscribers){
         throw new ApiError(404,"there is no any subscriber of this channel ")
     }
-    const subscriberCount = await Subscription.countDocuments({channel:channelId})
-    if(subscriberCount== undefined){
+    
+    if(numberOfSubscriber == undefined){
         throw new ApiError(404," subscriber Count can not be count")
     }
     
     return res
     .status(200)
     .json(
-        new ApiResponse(200,{subscriberCount,subcribers:subcribersOfChannel},"your subscribers are here")
+        new ApiResponse(200,{numberOfSubscriber,subscribers},"your subscribers are here")
     )
 })
 
@@ -97,11 +98,14 @@ const getSubcribedChannel = AsyncHandler( async (req,res)=>{
     if(!user){
         throw new ApiError(404,"user not found")
     }
-    const subscribedChannel = await Subscription.find({subscriber:user}).populate("channel","userName avatar")
+    const [subscribedChannel,countSubscribedToChannel] = await Promise.all([
+        Subscription.find({subscriber:user}).populate("channel","userName avatar"),
+        Subscription.countDocuments({subscriber:user})
+    ])
+    
     if(!subscribedChannel){
         throw new ApiError(404,"there is no any channel you subscribed")
     }
-    const countSubscribedToChannel = await Subscription.countDocuments({subscriber:user})
     if(countSubscribedToChannel== undefined){
         throw new ApiError(404,"countSubscribedChannel is undefined")
     }

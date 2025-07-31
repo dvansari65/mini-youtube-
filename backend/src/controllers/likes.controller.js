@@ -14,26 +14,21 @@ const toggleVideoLike = AsyncHandler(async (req, res) => {
   
     const video = await Video.findById(videoId);
     if (!video) throw new ApiError(404, "video not found");
+    let updatedVideo;
+    let likesCount;
   
     try {
       const isLiked = await Like.findOne({ video: videoId, likedBy: user });
-      let updatedVideo;
-      let likesCount;
-       
       if (isLiked) {
-        
-        // Unlike the video
         await Like.deleteOne({ video: videoId, likedBy: user });
   
         updatedVideo = await Video.findByIdAndUpdate(
           videoId,
           { $inc: { likesCount: -1 },
-            $pull:{likes:user}
+            $pull:{likes: mongoose.Types.ObjectId(user)}
         },
           { new: true }
         );
-       
-  
         // Ensure non-negative count
         if (updatedVideo.likesCount < 0) {
           updatedVideo = await Video.findByIdAndUpdate(
@@ -57,11 +52,10 @@ const toggleVideoLike = AsyncHandler(async (req, res) => {
         updatedVideo = await Video.findByIdAndUpdate(
           videoId,
           { $inc: { likesCount: 1 } ,
-            $push:{likes:user}
+            $push:{likes:mongoose.Types.ObjectId(user)}
         },
           { new: true }
         );
-  
         likesCount = updatedVideo.likesCount;
   
         return res.status(200).json(
@@ -79,7 +73,6 @@ const toggleVideoLike = AsyncHandler(async (req, res) => {
 const toggleCommentLike = AsyncHandler( async()=>{
         const {commentId} = req.params
         const user = req.user?._id
-        console.log("comment id :",commentId)
         const isCommentExists = await Like.findOne(commentId)
         if(!isCommentExists){
             throw new ApiError(404,"comment not found")
@@ -89,10 +82,9 @@ const toggleCommentLike = AsyncHandler( async()=>{
         }
         try {
             const existingLike = await Like.findOne({likedBy:user,comment:commentId})
-    
             if(existingLike){
-                await Like.deleteMany({_id:existingLike._id})
-                await Comment.findByIdAndUpdate(commentId,{
+                await Like.deleteOne({_id:existingLike._id})
+                await Like.findByIdAndUpdate(commentId,{
                     $inc:{
                         count:-1
                     }
@@ -100,10 +92,10 @@ const toggleCommentLike = AsyncHandler( async()=>{
                 {
                     new:true,
                 })
-                return res.status(200).json( new ApiResponse(200,{},"comment got disliked"))
+                return res.status(200).json( new ApiResponse(200,{isLiked:false},"comment got disliked"))
             }else{
                 await Like.create({comment:commentId,likedBy:user})
-                await Comment.findByIdAndUpdate(commentId,{
+                await Like.findByIdAndUpdate(commentId,{
                     $inc:{
                         count:1
                     }
@@ -112,7 +104,7 @@ const toggleCommentLike = AsyncHandler( async()=>{
                     new:true,
                 })
 
-                return res.status(200).json( new ApiResponse(200,{},"liked comment"))
+                return res.status(200).json( new ApiResponse(200,{isLiked:true},"comment liked!"))
             }
            
         } catch (error) {
@@ -181,21 +173,22 @@ const getAllLikedVideos = AsyncHandler( async (req,res)=>{
             const videos = await Video.find()
     
             const videoId = videos.map(video=>video?._id.toString())
-    
-            const allVideos = await Like.find(
-                {
-                    likedBy:user,
-                    video:videoId
-                }
-            ).sort({createdAt:-1})
-            console.log("all videos:",allVideos)
-            return res
-            .status(200)
-            .json(
-                new ApiResponse(200,{allVideos},"all liked videos fetched successfully")
-            )
+            if(videoId){
+                const allVideos = await Like.find(
+                    {
+                        likedBy:user,
+                        video:videoId
+                    }
+                ).sort({createdAt:-1})
+                
+                return res
+                .status(200)
+                .json(
+                    new ApiResponse(200,{allVideos},"all liked videos fetched successfully")
+                )
+            }
         } catch (error) {
-            console.error("something went wrong while fetching the videos",error)
+            console.error("something went wrong while fetching the videos!",error)
             throw new ApiError(500,"something went wrong while fetching the videos")
         }
 
@@ -208,17 +201,25 @@ const totalUserVideoslikes = AsyncHandler( async(req,res)=>{
             throw new ApiError(402,"unAuthorized request")
         }
        try {
-         const videos = await Video.find()
-         const videoIds = videos.map(video=>video?._id)
-        
-        //  console.log("video ids:",videoIds)
-         const videoLikesCount = await Like.countDocuments({video:videoIds})
-         const allLikesVideos = await Like.find({video:videoIds})
-         return res
-         .status(200)
-         .json(
-            new ApiResponse(200,{videoLikesCount,allLikesVideos},"videos fetched successfully")
-         )
+         const videos = await Video.find({owner:user})
+         const videoIds = videos.map(video=>video._id.toString())
+         if(!videoIds){
+            throw new ApiError("video ids not found!",404)
+         }
+         try {
+            const [videoLikesCount,allLikesVideos] = await Promise.all([
+                Like.countDocuments({video:videoIds}),
+                Like.find({video:videoIds})
+             ])
+             return res
+             .status(200)
+             .json(
+                new ApiResponse(200,{videoLikesCount,allLikesVideos},"videos fetched successfully")
+             )
+         } catch (error) {
+            console.log("failed to count videos likes!",error)
+            throw new ApiError("failed to count videos likes!",500)
+         }
         
        } catch (error) {
         console.error("something went wrong",error)
@@ -228,14 +229,15 @@ const totalUserVideoslikes = AsyncHandler( async(req,res)=>{
 
 const numberOfLikesOfVideos = AsyncHandler( async (req,res)=>{
     const {videoId} = req.params
-    const user = req.user?._id
 
     if(!videoId){
         throw new ApiError(404,"please provide video id ")
     }
     try {
         const videoLikes = await Like.countDocuments({video:videoId})
-        
+        if(!videoLikes){
+            throw new ApiError("video likes not obtained!",404)
+        }
         return res
         .status(200)
         .json(
@@ -244,7 +246,6 @@ const numberOfLikesOfVideos = AsyncHandler( async (req,res)=>{
     } catch (error) {
         console.error("failed to fetched likes count",error)
     }
-
 })
 
 const checkLikeStatus = AsyncHandler(async (req, res) => {

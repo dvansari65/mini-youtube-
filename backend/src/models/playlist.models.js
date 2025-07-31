@@ -5,7 +5,7 @@ const playListSchema = new Schema({
     videos:[{
         type:Schema.Types.ObjectId,
         ref:"Video",
-        reqiured:true
+        required:true
     }],
     title:{
         type:String,

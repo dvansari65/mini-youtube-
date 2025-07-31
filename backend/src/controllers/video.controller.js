@@ -98,8 +98,6 @@ const uploadVideosContent = AsyncHandler ( async (req,res)=>{
 
 const watchVideo = AsyncHandler(async (req,res)=>{
     const {videoId} = req.params
-
-    console.log("req.params:",req.params)
     if(!videoId){
         throw new ApiError(401,"please provide video id")
     }
@@ -108,16 +106,8 @@ const watchVideo = AsyncHandler(async (req,res)=>{
     if(!video){
         throw new ApiError(404,"video not found")
     }
-    console.log("owner",video.owner)
-    const user = await User.findById(video.owner._id)
-    if(!user){
-      throw new ApiError(404,"user not found")
-    }
-    console.log("user:",user)
     video.views = (video.views || 0) + 1;
-
     await video.save({validateBeforeSave:false})
-    console.log("video data:",video)
 
     return res
     .status(200)
@@ -132,7 +122,6 @@ const watchVideo = AsyncHandler(async (req,res)=>{
                 views:video.views,
                 videoFile:video.videoFile,
                 thumbNail:video.thumbNail,
-                avatar:user.avatar || null,
                 likes:video.likes.length || 0
             },
             "video watched by user"
@@ -143,10 +132,11 @@ const watchVideo = AsyncHandler(async (req,res)=>{
 const updateVideo = AsyncHandler(async (req, res) => {
     const { title, description, thumbNail } = req.body;
     const { videoId } = req.params;
-    const user = req.user?._id;
-  
-    // Check if videoId and at least one field to update are provided
-    if (!videoId) {
+    const user = req.user?._id
+    if(!user){
+      throw new ApiError(400,"please logged in!")
+    }
+    if (!videoId ) {
       throw new ApiError(400, "Video ID is required");
     }
   
@@ -156,23 +146,13 @@ const updateVideo = AsyncHandler(async (req, res) => {
         "At least one field (title, description, or thumbnail) is required to update"
       );
     }
-  
-    if (!user) {
-      throw new ApiError(401, "User not authenticated");
-    }
-  
-    // Check if video exists
     const video = await Video.findById(videoId);
     if (!video) {
       throw new ApiError(404, "Video not found in the database");
     }
-  
-    // Check if user is the owner
     if (video.owner.toString() !== user.toString()) {
       throw new ApiError(403, "You are not authorized to update this video");
     }
-  
-    // Prepare update object with only provided fields
     const updateData = {};
     if (title) updateData.title = title;
     if (description) updateData.description = description;
@@ -183,11 +163,9 @@ const updateVideo = AsyncHandler(async (req, res) => {
         new: true,
         runValidators: true, 
       });
-  
       if (!updatedVideo) {
         throw new ApiError(500, "Video update failed");
       }
-  
       return res
         .status(200)
         .json(new ApiResponse(200, updatedVideo, "Video updated successfully"));

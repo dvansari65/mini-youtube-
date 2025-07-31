@@ -305,6 +305,7 @@ const updateAvatar = AsyncHandler(async (req, res) => {
             if(fileId){
                 await imagekit.deleteFile(fileId)
             }
+            fs.unlinkSync(avatarFile.path)
         } catch (error) {
             console.log("failed to delete image!",error)
         }
@@ -473,14 +474,13 @@ const getWatchHistory = AsyncHandler(async (req, res) => {
             },
         },
     ]);
-    console.log("user after adding pipeline =>", user);
     if (!user?.length || !Array.isArray(user)) {
         throw new ApiError(404, "there is no watch history ");
     }
 
     return res
         .status(200)
-        .json(new ApiResponse(200, user, "history obtained successfully"));
+        .json(new ApiResponse(200, {watchHistory:user}, "history obtained successfully"));
 });
 export default registerUser;
 export {

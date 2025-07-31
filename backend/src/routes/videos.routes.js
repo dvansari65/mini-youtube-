@@ -19,7 +19,7 @@ videoRouter.route("/upload-content").post(verifyJwt,
         { name: "thumbNail", maxCount: 1 },
         { name: "videos", maxCount: 1 },
       ]),
-     uploadVideosContent)
+uploadVideosContent)
 videoRouter.route("/update-video/:videoId").patch(verifyJwt,updateVideo)
 videoRouter.route("/watch-video/:videoId").get(watchVideo)
 videoRouter.route("/delete-video/:videoId").delete(verifyJwt,deleteVideo)

@@ -7,9 +7,15 @@ const videoSchema = new Schema({
         type:String,
         required:[true,"video must be provided!"]
     },
+    videoFileId:{
+        type:String
+    },
     thumbNail:{
         type:String,
         required:[true,"please provide Thumbnail"]
+    },
+    thumbNailFileId:{
+        type:String
     },
     title:{
         type:String,
@@ -31,6 +37,7 @@ const videoSchema = new Schema({
         type:Number,
         default:0,
     },
+    
     isPublished:{
         default:true,
         type:Boolean
