@@ -19,7 +19,6 @@ const getAllComments = AsyncHandler(async (req, res) => {
       if (!videoComments || videoComments.length === 0) {
         return res.status(200).json(new ApiResponse(200, [], "No comments found"));
       }
-  
       return res
         .status(200)
         .json(new ApiResponse(200, videoComments, "All comments fetched successfully"));
@@ -44,25 +43,16 @@ const getComment  = AsyncHandler(async(req,res)=>{
 })
 
 const addComments= AsyncHandler( async (req,res)=>{
-    console.log("addComments controller triggered")
         const {videoId} = req.query
         const {content}  = req.body
-        const user = req.user?._id
 
-        const userName = await User.findById(user)
-        console.log("username",userName)
         if(!userName){
             throw new ApiError(404,"user not found ")
         }
 
-        
         if(!content || content.trim().length==0 ){
             throw new ApiError(402,"please enter comment ")
         }
-        if(!user){
-            throw new ApiError(401,"unauthorized request")
-        }
-
         if(videoId){
             const video = await Video.findById(videoId)
             if(!video){
@@ -77,11 +67,10 @@ const addComments= AsyncHandler( async (req,res)=>{
                owner:userName.userName.toString(),
                video: videoId || undefined,
            })
-            const commentCount = await Comment.countDocuments({video:videoId})
             return res
             .status(200)
             .json(
-            new ApiResponse(200,{commentCount,newComment},"comment successfully done!")
+            new ApiResponse(200,{newComment},"comment successfully done!")
             )
 
          } catch (error) {
@@ -102,8 +91,6 @@ const deleteComment = AsyncHandler( async (req,res)=>{
         throw new ApiError(401,"unauthorized request ")
     }
     const comment = await Comment.findById(commentId)
-    console.log("comment for delete",comment)
-    console.log("comment:",comment)
     if(!comment){
         throw new ApiError(401,"comment not found in the database ")
     }
@@ -112,7 +99,6 @@ const deleteComment = AsyncHandler( async (req,res)=>{
         throw new ApiError(401,"this is not your comment")
     }
     await Comment.deleteOne({_id:commentId})
-    
     return res
     .status(200)
     .json(
